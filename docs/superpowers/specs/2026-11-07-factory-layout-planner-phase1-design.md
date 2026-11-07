@@ -41,6 +41,7 @@ interface Project {
   createdAt: string;   // ISO
   updatedAt: string;
   customTypes: MachineType[];   // user-created machine types
+  typeModels: Record<string, string>; // typeId -> imported model key, applies to every machine of that type (built-in or custom)
   layouts: Layout[];            // at least one
   activeLayoutId: string;
 }
@@ -65,7 +66,7 @@ interface Factory {
 interface Opening {
   id: string; name: string;
   wall: 'north' | 'south' | 'east' | 'west';
-  offset: number;               // from the wall's start corner to opening centre
+  offset: number;               // to opening centre: north/south walls measured from the west end (x), east/west walls from the south end (y)
   width: number; height: number;
   sill?: number;                // windows only
   kind?: 'personnel' | 'loading'; // doors only
@@ -92,7 +93,6 @@ interface MachineType {
   id: string; name: string; category: MachineCategory;
   defaults: Pick<Machine, 'length' | 'width' | 'height' | 'clearance' | 'operatorArea'>;
   model: string;      // procedural model key, e.g. 'bandsaw'
-  modelImport?: string; // imported model key applied to every machine of this type
 }
 ```
 
