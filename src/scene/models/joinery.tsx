@@ -19,6 +19,54 @@ export function Mortiser({ l, w, h, color }: ModelProps) {
   );
 }
 
+/** CNC mortiser: white base with clamping table and yellow guard rail, orange spindle head, side electrical cabinet and arm-mounted control panel. */
+export function CncMortiser({ l, w, h, color }: ModelProps) {
+  const body = usePaint(color, mat.white);
+  const tableY = h * 0.48;
+  const baseL = l * 0.74, baseX = -l * 0.13;
+  const cabX = l * 0.38;
+  // Mirrored on x so, seen from the front (-z), the electrical cabinet sits on the operator's right as on the real machine.
+  return (
+    <group scale={[-1, 1, 1]}>
+      {[-0.4, 0.4].map((f) => <B key={f} p={[baseX + baseL * f, 0.05, 0]} s={[0.12, 0.1, w * 0.9]} m={mat.grey} />)}
+      <B p={[baseX, 0.1 + (tableY - 0.12) / 2, 0.02 * w]} s={[baseL, tableY - 0.12, w * 0.8]} m={body} />
+      <B p={[baseX, tableY * 0.45, -w * 0.405]} s={[baseL * 0.7, tableY * 0.3, 0.01]} m={mat.grey} />
+      <C p={[baseX + baseL * 0.15, tableY * 0.45, -w * 0.41]} rad={0.07} len={0.03} m={mat.dark} axis="z" />
+      {/* clamping table */}
+      <B p={[baseX, tableY - 0.03, -w * 0.05]} s={[baseL * 0.95, 0.04, w * 0.65]} m={mat.steel} />
+      {Array.from({ length: 6 }, (_, i) => (
+        <B key={i} p={[baseX, tableY + 0.01, -w * 0.32 + i * w * 0.11]} s={[baseL * 0.93, 0.03, 0.025]} m={mat.grey} />
+      ))}
+      {[-0.3, -0.1, 0.1, 0.3].map((f) => (
+        <group key={f}>
+          <B p={[baseX + baseL * f, tableY + 0.07, -w * 0.12]} s={[0.05, 0.1, 0.12]} m={mat.steel} />
+          <C p={[baseX + baseL * f, tableY + 0.17, -w * 0.12]} rad={0.02} len={0.1} m={mat.steel} />
+        </group>
+      ))}
+      <B p={[baseX, tableY + 0.06, -w * 0.12]} s={[baseL * 0.9, 0.025, 0.04]} m={mat.wood} />
+      {/* yellow guard rail around the table */}
+      <B p={[baseX, tableY + 0.04, -w * 0.47]} s={[baseL * 1.08, 0.05, 0.06]} m={mat.yellow} />
+      {[-1, 1].map((s) => <B key={s} p={[baseX + s * baseL * 0.54, tableY + 0.04, -w * 0.15]} s={[0.06, 0.05, w * 0.64]} m={mat.yellow} />)}
+      <B p={[baseX - baseL * 0.38, tableY + 0.02, -w * 0.44]} s={[0.25, 0.06, 0.08]} m={mat.grey} />
+      {/* column and spindle head */}
+      <B p={[baseX + baseL * 0.05, (tableY + h * 0.92) / 2, w * 0.3]} s={[0.3, h * 0.92 - tableY, 0.25]} m={body} />
+      <B p={[baseX - baseL * 0.05, h * 0.74, w * 0.02]} s={[l * 0.24, h * 0.26, w * 0.4]} m={mat.orange} />
+      <B p={[baseX + baseL * 0.18, h * 0.66, -w * 0.05]} s={[l * 0.08, h * 0.12, w * 0.2]} m={mat.blue} />
+      {[-0.05, 0.05].map((dx) => (
+        <C key={dx} p={[baseX - baseL * 0.05 + dx * l, h * 0.58, -w * 0.08]} rad={0.02} len={h * 0.06} m={mat.blade} />
+      ))}
+      <C p={[baseX - baseL * 0.05, h * 0.93, w * 0.1]} rad={0.04} len={h * 0.12} m={mat.steel} />
+      {/* electrical cabinet, control arm and panel */}
+      <B p={[cabX, (h * 0.75) / 2 + 0.05, w * 0.05]} s={[l * 0.22, h * 0.75, w * 0.6]} m={body} />
+      <B p={[cabX - l * 0.04, h * 0.45, -w * 0.255]} s={[0.02, 0.12, 0.02]} m={mat.dark} />
+      <B p={[cabX, h * 0.24, -w * 0.255]} s={[l * 0.1, h * 0.08, 0.01]} m={mat.grey} />
+      <B p={[cabX - l * 0.02, (h * 0.8 + h) / 2, w * 0.2]} s={[0.08, h * 0.2, 0.08]} m={body} />
+      <B p={[cabX - l * 0.1, h - 0.04, w * 0.05]} s={[l * 0.2, 0.08, 0.08]} m={body} />
+      <Panel p={[cabX - l * 0.2, h * 0.84, -w * 0.1]} s={[l * 0.2, h * 0.14, 0.08]} />
+    </group>
+  );
+}
+
 export function Tenoner({ l, w, h, color }: ModelProps) {
   const body = usePaint(color, mat.blue);
   const bedY = h * 0.5;

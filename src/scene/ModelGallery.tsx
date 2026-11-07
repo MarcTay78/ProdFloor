@@ -7,10 +7,15 @@ import { getModel } from './models';
 /** Dev page (?gallery): every built-in model at its catalogue size, with a wire box showing the exact L×W×H. */
 export function ModelGallery() {
   const [bounds, setBounds] = useState(true);
+  // ?gallery=<type id> shows one model close up from the front (-z); ?gallery shows all.
+  const only = new URLSearchParams(location.search).get('gallery');
+  const types = only ? CATALOGUE.filter((t) => t.id === only) : CATALOGUE;
+  const single = types.length === 1;
   const cols = 7, gap = 7;
+  const target: [number, number, number] = single ? [0, 1, 0] : [gap * 3, 0, gap * 1.5];
   return (
     <div className="relative h-full">
-      <Canvas shadows camera={{ position: [22, 18, 30], fov: 45 }}>
+      <Canvas shadows camera={{ position: single ? [2.6, 2.4, -3.6] : [22, 18, 30], fov: 45 }}>
         <color attach="background" args={['#1e293b']} />
         <hemisphereLight args={['#e3ecf5', '#3f3f46', 1]} />
         <directionalLight castShadow position={[20, 30, 15]} intensity={1.8} shadow-mapSize={[2048, 2048]} shadow-camera-left={-40} shadow-camera-right={40} shadow-camera-top={40} shadow-camera-bottom={-40} />
@@ -18,7 +23,7 @@ export function ModelGallery() {
           <planeGeometry args={[80, 60]} />
           <meshStandardMaterial color="#8c9094" />
         </mesh>
-        {CATALOGUE.map((t, i) => {
+        {types.map((t, i) => {
           const Model = getModel(t.model);
           const { length: l, width: w, height: h } = t.defaults;
           return (
@@ -34,7 +39,7 @@ export function ModelGallery() {
             </group>
           );
         })}
-        <OrbitControls target={[gap * 3, 0, gap * 1.5]} />
+        <OrbitControls target={target} />
       </Canvas>
       <label className="absolute left-3 top-3 flex items-center gap-2 rounded bg-slate-900/80 px-2 py-1 text-xs text-slate-200">
         <input type="checkbox" checked={bounds} onChange={(e) => setBounds(e.target.checked)} /> Show L×W×H bounds
