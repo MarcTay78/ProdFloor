@@ -10,8 +10,8 @@ export function LeftPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-slate-900">
       <div className="flex border-r border-slate-700">
-        <button className={tab(leftTab === 'library')} onClick={() => setLeftTab('library')}>Library</button>
-        <button className={tab(leftTab === 'workflow')} onClick={() => setLeftTab('workflow')}>Workflow</button>
+        <button className={tab(leftTab === 'library')} aria-pressed={leftTab === 'library'} onClick={() => setLeftTab('library')}>Library</button>
+        <button className={tab(leftTab === 'workflow')} aria-pressed={leftTab === 'workflow'} onClick={() => setLeftTab('workflow')}>Workflow</button>
       </div>
       <div className="min-h-0 flex-1">{leftTab === 'library' ? <LeftLibrary /> : <WorkflowPanel />}</div>
     </div>

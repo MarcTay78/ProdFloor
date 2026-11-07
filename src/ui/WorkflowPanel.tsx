@@ -59,19 +59,23 @@ export function WorkflowPanel() {
                     key={s.id + s.name}
                     className={`${input} min-w-0 flex-1`}
                     defaultValue={s.name}
-                    onBlur={(e) => e.target.value.trim() && e.target.value !== s.name && updateStep(s.id, { name: e.target.value.trim() })}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (!v) e.target.value = s.name;
+                      else if (v !== s.name) updateStep(s.id, { name: v });
+                    }}
                     onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                     aria-label={`Step ${i + 1} name`}
                   />
-                  <button className={`${btn} px-1.5`} disabled={i === 0} onClick={() => moveStep(s.id, -1)} title="Move up">↑</button>
-                  <button className={`${btn} px-1.5`} disabled={i === layout.workflow.length - 1} onClick={() => moveStep(s.id, 1)} title="Move down">↓</button>
-                  <button className={`${btn} px-1.5 text-red-300`} onClick={() => removeStep(s.id)} title="Delete step">×</button>
+                  <button className={`${btn} px-1.5`} disabled={i === 0} onClick={() => moveStep(s.id, -1)} title="Move up" aria-label={`Move step ${i + 1} up`}>↑</button>
+                  <button className={`${btn} px-1.5`} disabled={i === layout.workflow.length - 1} onClick={() => moveStep(s.id, 1)} title="Move down" aria-label={`Move step ${i + 1} down`}>↓</button>
+                  <button className={`${btn} px-1.5 text-red-300`} onClick={() => removeStep(s.id)} title="Delete step" aria-label={`Delete step ${i + 1}`}>×</button>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1">
                   {machines.map((m) => (
                     <span key={m.id} className="flex items-center rounded bg-slate-700 text-[11px]">
                       <button className="px-1.5 hover:text-sky-300" onClick={() => focus(m.id)}>{m.name}</button>
-                      <button className="px-1 text-slate-400 hover:text-red-300" onClick={() => updateStep(s.id, { machineIds: s.machineIds.filter((x) => x !== m.id) })} title="Remove from step">×</button>
+                      <button className="px-1 text-slate-400 hover:text-red-300" onClick={() => updateStep(s.id, { machineIds: s.machineIds.filter((x) => x !== m.id) })} title="Remove from step" aria-label={`Remove ${m.name} from step ${i + 1}`}>×</button>
                     </span>
                   ))}
                   {!machines.length && <span className="text-[11px] text-amber-300">no machine</span>}
