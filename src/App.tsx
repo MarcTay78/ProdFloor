@@ -60,7 +60,7 @@ function Planner() {
   if (!ready) return <div className="grid h-full place-items-center text-slate-400">Loading…</div>;
 
   return (
-    <div className="grid h-full grid-cols-[260px_minmax(0,1fr)_300px] grid-rows-[46px_minmax(0,1fr)_118px] bg-slate-950">
+    <div className="grid h-full grid-cols-[clamp(180px,22vw,260px)_minmax(0,1fr)_clamp(200px,25vw,300px)] grid-rows-[46px_minmax(0,1fr)_118px] bg-slate-950">
       <div className="col-span-3"><TopToolbar /></div>
       <LeftPanel />
       <div className="relative min-h-0">
