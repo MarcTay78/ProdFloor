@@ -20,6 +20,8 @@ export function RightInspector() {
   const m = layout.machines.find((x) => x.id === selectedId);
   const warnings = useMemo(() => validateLayout(layout).filter((w) => m && w.machineIds.includes(m.id)), [layout, m]);
 
+  const steps = layout.workflow.flatMap((s, i) => (m && s.machineIds.includes(m.id) ? [{ id: s.id, name: s.name, no: i + 1 }] : []));
+
   if (!m) {
     return (
       <Panel>
@@ -107,11 +109,17 @@ export function RightInspector() {
         <ModelSection m={m} typeName={type?.name ?? 'this type'} typeModel={project.typeModels[m.typeId]} onSetMachine={(k) => set({ modelOverride: k })} onSetType={(k) => setTypeModel(m.typeId, k)} />
       </Section>
 
-      {warnings.length > 0 && (
-        <Section title="Problems">
-          {warnings.map((w) => <p key={w.id} className={`text-xs ${w.severity === 'error' ? 'text-red-300' : 'text-amber-300'}`}>{w.message}</p>)}
-        </Section>
-      )}
+      <Section title="Checks">
+        {warnings.length
+          ? warnings.map((w) => <p key={w.id} className={`text-xs ${w.severity === 'error' ? 'text-red-300' : 'text-amber-300'}`}>{w.message}</p>)
+          : <p className="text-xs text-green-300">All clear</p>}
+      </Section>
+
+      <Section title="Workflow">
+        {steps.length
+          ? steps.map((s) => <p key={s.id} className="text-xs text-slate-300">Step {s.no} ({s.name})</p>)
+          : <p className="text-xs text-slate-500">Not in the workflow</p>}
+      </Section>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button className={btn} onClick={() => { const id = duplicateMachine(m.id); if (id) select(id); }}>Duplicate</button>
