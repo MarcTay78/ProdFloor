@@ -7,7 +7,7 @@ import { toThree } from './coords';
 const COLOR = '#f97316';
 const Y = 0.25;
 
-/** Material-flow arrows from each machine's output point to the next machine's input point, numbered in order. */
+/** Flow arrows run from each machine's output point to the next step's machine input point, labelled with step number and Manhattan distance. */
 export function FlowArrows({ flows, machines, showNumbers }: { flows: FlowLink[]; machines: Machine[]; showNumbers: boolean }) {
   const byId = new Map(machines.map((m) => [m.id, m]));
   return (
@@ -22,7 +22,7 @@ export function FlowArrows({ flows, machines, showNumbers }: { flows: FlowLink[]
         const tip = toThree(q.x - (dx / len) * (head / 2), q.y - (dy / len) * (head / 2), Y);
         const angle = Math.atan2(dy, dx);
         return (
-          <group key={f.id}>
+          <group key={`${f.fromMachineId}>${f.toMachineId}:${f.label ?? ''}`}>
             <Line points={[toThree(p.x, p.y, Y), toThree(q.x - (dx / len) * head, q.y - (dy / len) * head, Y)]} color={COLOR} lineWidth={3} raycast={() => null} />
             <mesh position={tip} rotation={[0, angle, -Math.PI / 2]} raycast={() => null}>
               <coneGeometry args={[0.18, head, 12]} />

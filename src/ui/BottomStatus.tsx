@@ -23,7 +23,7 @@ export function BottomStatus() {
   const { factory: f, machines } = layout;
 
   const warnings = useMemo(() => validateLayout(layout), [layout]);
-  const area = useMemo(() => areaBreakdown(layout, project), [layout, project]);
+  const area = useMemo(() => areaBreakdown(layout, project), [layout.factory, layout.machines, project.customTypes]); // eslint-disable-line react-hooks/exhaustive-deps
   const movement = useMemo(() => totalMovement(layout), [layout]);
   const pct = (v: number) => (area.usable ? (v / area.usable) * 100 : 0);
   const areaTitle = [
@@ -50,7 +50,7 @@ export function BottomStatus() {
         <Stat label="Floor area" value={`${f2(f.length * f.width)} m²`} />
         <Stat label="Ceiling" value={`${f2(f.ceilingHeight)} m`} />
         <Stat label="Machines" value={String(machines.length)} title={catTitle} />
-        <div className="col-span-2" title={areaTitle}>
+        <div className="col-span-2" title={areaTitle} role="img" aria-label={areaTitle}>
           <div className="text-slate-500">Space utilisation · footprint {f2(pct(area.parts.footprint))} %</div>
           <div className="mt-1 flex h-2 w-56 overflow-hidden rounded bg-slate-800">
             {PARTS.map((p) => <div key={p.key} className={p.color} style={{ width: `${pct(area.parts[p.key])}%` }} />)}

@@ -117,6 +117,12 @@ describe('operator and clearance checks', () => {
     expect(codes(layout([m]))).toEqual(['ZONE_CROSSES_WALL']);
   });
 
+  test('zone crossing ignores internal walls the footprint itself overlaps', () => {
+    const f = factory({ internalWalls: [{ id: 'w1', x1: 5, y1: 0, x2: 5, y2: 10, thickness: 0.2, height: 3 }] });
+    const w = validateLayout(layout([box(5, 5)], f));
+    expect(w.map((x) => [x.code, x.targetId])).toEqual([['OBSTACLE_OVERLAP', 'w1']]);
+  });
+
   test('operator area crossing an internal wall', () => {
     const f = factory({ internalWalls: [{ id: 'w1', x1: 0, y1: 6, x2: 20, y2: 6, thickness: 0.2, height: 3 }] });
     expect(codes(layout([box(5, 5, 2, 1, op)], f))).toEqual(['OPERATOR_BLOCKED', 'ZONE_CROSSES_WALL']);

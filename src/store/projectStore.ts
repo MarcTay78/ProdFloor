@@ -130,7 +130,14 @@ export const useProjectStore = create<ProjectState>()(
           setWorkflow((w) => [...w, { id, name: name ?? `Step ${w.length + 1}`, machineIds: [] }]);
           return id;
         },
-        updateStep: (id, patch) => setWorkflow((w) => w.map((s) => (s.id === id ? { ...s, ...patch } : s))),
+        updateStep: (id, patch) =>
+          setWorkflow((w, l) => {
+            if (patch.machineIds) {
+              const known = new Set(l.machines.map((m) => m.id));
+              patch = { ...patch, machineIds: [...new Set(patch.machineIds)].filter((x) => known.has(x)) };
+            }
+            return w.map((s) => (s.id === id ? { ...s, ...patch } : s));
+          }),
         moveStep: (id, dir) =>
           setWorkflow((w) => {
             const i = w.findIndex((s) => s.id === id), j = i + dir;

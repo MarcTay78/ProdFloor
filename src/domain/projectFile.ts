@@ -126,7 +126,11 @@ export function parseProjectFile(text: string): ParseResult {
     return { ok: false, errors: [`Unsupported schemaVersion ${raw?.schemaVersion}; this app reads version ${SCHEMA_VERSION}`] };
   }
   if (typeof raw.project !== 'object' || raw.project === null) return { ok: false, errors: ['File has no project'] };
-  const { notices } = migrateProject(raw.project);
-  const errors = validateProject(raw.project);
-  return errors.length ? { ok: false, errors } : { ok: true, file: raw as ProjectFile, notices };
+  try {
+    const { notices } = migrateProject(raw.project);
+    const errors = validateProject(raw.project);
+    return errors.length ? { ok: false, errors } : { ok: true, file: raw as ProjectFile, notices };
+  } catch {
+    return { ok: false, errors: ['File structure is invalid'] };
+  }
 }

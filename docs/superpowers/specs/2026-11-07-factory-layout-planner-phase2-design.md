@@ -132,7 +132,7 @@ Vitest, domain and store only; UI verified with a browser checklist per task, as
 - `analysis.test.ts`: straight vs Manhattan for rotated machines; mean over parallel links; total and `null` case; `areaBreakdown` on a hand-checkable layout within ±0.1 m², overlap priority.
 - `validation.test.ts`: one case per new code.
 - `projectFile.test.ts`: old file without workflow migrates; unknown machine ids stripped; duplicate step id rejected.
-- `projectStore.test.ts`: step actions re-derive flows; machine delete updates steps; layout duplicate remaps ids.
+- `projectStore.test.ts`: step actions re-derive flows; machine delete updates steps; layout duplicate keeps a working workflow (machine ids unchanged).
 
 ## 8. Out of scope
 

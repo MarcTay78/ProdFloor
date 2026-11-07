@@ -60,6 +60,13 @@ describe('workflow', () => {
     expect(layout().flows.map((f) => [f.fromMachineId, f.toMachineId])).toEqual([[a, b]]);
   });
 
+  test('updateStep drops unknown and duplicate machine ids', () => {
+    const [a] = twoMachines();
+    const id = s().addStep('A');
+    s().updateStep(id, { machineIds: [a, 'ghost', a] });
+    expect(layout().workflow[0].machineIds).toEqual([a]);
+  });
+
   test('default step name is numbered', () => {
     s().addStep();
     expect(layout().workflow[0].name).toBe('Step 1');

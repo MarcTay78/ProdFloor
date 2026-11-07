@@ -115,6 +115,14 @@ describe('asNewProject', () => {
   });
 });
 
+describe('parseProjectFile malformed structure', () => {
+  test('null machine entry is rejected, not thrown', () => {
+    const p: any = sample();
+    p.layouts[0].machines = [null];
+    expect(parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }))).toEqual({ ok: false, errors: ['File structure is invalid'] });
+  });
+});
+
 describe('migrateProject', () => {
   test('a current project passes through unchanged', () => {
     const p = sample();
