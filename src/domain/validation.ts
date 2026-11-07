@@ -1,10 +1,11 @@
 import {
-  boxRect, clearanceRect, machineRect, polygonInsideBox, polygonsOverlap, rectCorners, segmentRect, type Rect,
+  boxRect, clearanceRect, machineRect, operatorRect, polygonInsideBox, polygonsOverlap, rectCorners, segmentRect, type Rect,
 } from './geometry';
 import type { Factory, InternalWall, Layout, Opening, Pillar, RestrictedZone } from './types';
 
 export type WarningCode =
-  | 'OUTSIDE_BUILDING' | 'TOO_TALL' | 'MACHINE_OVERLAP' | 'OBSTACLE_OVERLAP' | 'DOOR_BLOCKED' | 'CLEARANCE_INTRUSION';
+  | 'OUTSIDE_BUILDING' | 'TOO_TALL' | 'MACHINE_OVERLAP' | 'OBSTACLE_OVERLAP' | 'DOOR_BLOCKED' | 'CLEARANCE_INTRUSION'
+  | 'OPERATOR_BLOCKED' | 'OPERATOR_SHARED' | 'ZONE_CROSSES_WALL' | 'OPERATOR_AT_DOOR' | 'STEP_NO_MACHINE';
 
 export interface LayoutWarning {
   id: string;
@@ -44,16 +45,26 @@ export function validateLayout(layout: Layout): LayoutWarning[] {
   ];
   const keepClear = f.doors.map((d) => ({ id: d.id, name: d.name, poly: rectCorners(doorKeepClearRect(f, d)) }));
 
+  const ops = machines.map((m) => {
+    const r = operatorRect(m);
+    return r ? rectCorners(r) : null;
+  });
+  const walls = f.internalWalls.map((w) => rectCorners(wallRect(w)));
+  const overlapsPair = (i: number, j: number) => polygonsOverlap(corners[i], corners[j]);
+
   machines.forEach((m, i) => {
-    if (!polygonInsideBox(corners[i], 0, 0, f.length, f.width)) {
+    const inside = polygonInsideBox(corners[i], 0, 0, f.length, f.width);
+    if (!inside) {
       add({ severity: 'error', code: 'OUTSIDE_BUILDING', message: `${m.name} is outside or crossing the building walls`, machineIds: [m.id] });
     }
     if (m.height > f.ceilingHeight) {
       add({ severity: 'warning', code: 'TOO_TALL', message: `${m.name} (${m.height} m) is taller than the ceiling (${f.ceilingHeight} m)`, machineIds: [m.id] });
     }
     for (let j = i + 1; j < machines.length; j++) {
-      if (polygonsOverlap(corners[i], corners[j])) {
+      if (overlapsPair(i, j)) {
         add({ severity: 'error', code: 'MACHINE_OVERLAP', message: `${m.name} overlaps ${machines[j].name}`, machineIds: [m.id, machines[j].id] });
+      } else if (ops[i] && ops[j] && polygonsOverlap(ops[i]!, ops[j]!)) {
+        add({ severity: 'warning', code: 'OPERATOR_SHARED', message: `Operator areas of ${m.name} and ${machines[j].name} overlap`, machineIds: [m.id, machines[j].id] });
       }
     }
     for (const o of obstacles) {
@@ -68,10 +79,41 @@ export function validateLayout(layout: Layout): LayoutWarning[] {
     }
     const clear = rectCorners(clearanceRect(m));
     machines.forEach((other, j) => {
-      if (j !== i && polygonsOverlap(clear, corners[j]) && !polygonsOverlap(corners[i], corners[j])) {
+      if (j !== i && polygonsOverlap(clear, corners[j]) && !overlapsPair(i, j)) {
         add({ severity: 'warning', code: 'CLEARANCE_INTRUSION', message: `${other.name} is inside the operating clearance of ${m.name}`, machineIds: [m.id, other.id] });
       }
     });
+
+    const op = ops[i];
+    if (op) {
+      machines.forEach((other, j) => {
+        if (j !== i && !overlapsPair(i, j) && polygonsOverlap(op, corners[j])) {
+          add({ severity: 'error', code: 'OPERATOR_BLOCKED', message: `Operator area of ${m.name} is blocked by ${other.name}`, machineIds: [m.id, other.id] });
+        }
+      });
+      for (const o of obstacles) {
+        if (polygonsOverlap(op, o.poly)) {
+          add({ severity: 'error', code: 'OPERATOR_BLOCKED', message: `Operator area of ${m.name} is blocked by ${o.label}`, machineIds: [m.id], targetId: o.id });
+        }
+      }
+      for (const d of keepClear) {
+        if (polygonsOverlap(op, d.poly)) {
+          add({ severity: 'warning', code: 'OPERATOR_AT_DOOR', message: `Operator area of ${m.name} is in the access area of ${d.name}`, machineIds: [m.id], targetId: d.id });
+        }
+      }
+    }
+    const zones = op ? [clear, op] : [clear];
+    const crosses = zones.some((z) => !polygonInsideBox(z, 0, 0, f.length, f.width) || walls.some((w) => !polygonsOverlap(corners[i], w) && polygonsOverlap(z, w)));
+    if (inside && crosses) {
+      add({ severity: 'warning', code: 'ZONE_CROSSES_WALL', message: `Clearance or operator area of ${m.name} crosses a wall`, machineIds: [m.id] });
+    }
+  });
+
+  const present = new Set(machines.map((m) => m.id));
+  layout.workflow.forEach((s, i) => {
+    if (!s.machineIds.some((id) => present.has(id))) {
+      add({ severity: 'warning', code: 'STEP_NO_MACHINE', message: `Workflow step ${i + 1} "${s.name}" has no machine`, machineIds: [], targetId: s.id });
+    }
   });
   return out;
 }
