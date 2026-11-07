@@ -23,7 +23,7 @@ export function BottomStatus() {
   const { factory: f, machines } = layout;
 
   const warnings = useMemo(() => validateLayout(layout), [layout]);
-  const area = useMemo(() => areaBreakdown(layout, project), [layout.factory, layout.machines, project.customTypes]); // eslint-disable-line react-hooks/exhaustive-deps
+  const area = useMemo(() => areaBreakdown(layout, project), [layout.factory, layout.machines, project.customTypes]);
   const movement = useMemo(() => totalMovement(layout), [layout]);
   const pct = (v: number) => (area.usable ? (v / area.usable) * 100 : 0);
   const areaTitle = [
