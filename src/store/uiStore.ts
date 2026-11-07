@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'side';
-type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d';
+type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows';
 export type DialogName = 'factory' | 'projects' | 'customType';
 
 interface UiState {
@@ -19,6 +19,9 @@ interface UiState {
   showLabels: boolean;
   showGrid: boolean;
   showModelsIn2d: boolean;
+  showFlows: boolean;
+  leftTab: 'library' | 'workflow';
+  setLeftTab(t: 'library' | 'workflow'): void;
   toggle(key: ToggleKey): void;
   snap: number;
   setSnap(v: number): void;
@@ -51,6 +54,9 @@ export const useUiStore = create<UiState>()((set) => ({
   showLabels: true,
   showGrid: true,
   showModelsIn2d: false,
+  showFlows: true,
+  leftTab: 'library',
+  setLeftTab: (leftTab) => set({ leftTab }),
   toggle: (key) => set((s) => ({ [key]: !s[key] }) as Partial<UiState>),
   snap: 0.1,
   setSnap: (snap) => set({ snap }),

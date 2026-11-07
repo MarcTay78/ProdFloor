@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
-import { createWhitePartLayout } from '../domain/templates';
-import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Project } from '../domain/types';
+import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
+import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Project, WorkflowStep } from '../domain/types';
+import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
 
 export const activeLayout = (p: Project): Layout =>
   p.layouts.find((l) => l.id === p.activeLayoutId) ?? p.layouts[0];
@@ -28,6 +29,13 @@ interface ProjectState {
   setActiveLayout(id: string): void;
   addCustomType(type: MachineType): void;
   setTypeModel(typeId: string, modelKey: string | null): void;
+  addStep(name?: string): string;
+  updateStep(id: string, patch: Partial<Pick<WorkflowStep, 'name' | 'machineIds'>>): void;
+  moveStep(id: string, dir: -1 | 1): void;
+  removeStep(id: string): void;
+  assignToStep(stepId: string, machineId: string): void;
+  applyWorkflowTemplate(templateId: string): void;
+  saveWorkflowTemplate(name: string): void;
 }
 
 const touch = (p: Project): Project => ({ ...p, updatedAt: new Date().toISOString() });
@@ -40,6 +48,12 @@ export const useProjectStore = create<ProjectState>()(
         setProj((p) => ({ ...p, layouts: p.layouts.map((l) => (l.id === activeLayout(p).id ? fn(l) : l)) }));
       const setMachines = (fn: (ms: Machine[]) => Machine[]) => setLayout((l) => ({ ...l, machines: fn(l.machines) }));
       const setFactory = (fn: (f: Factory) => Factory) => setLayout((l) => ({ ...l, factory: fn(l.factory) }));
+      /** Every workflow change goes through here so flows stay derived from steps. */
+      const setWorkflow = (fn: (w: WorkflowStep[], l: Layout) => WorkflowStep[]) =>
+        setLayout((l) => {
+          const workflow = fn(l.workflow, l);
+          return { ...l, workflow, flows: deriveFlows(workflow) };
+        });
 
       return {
         project: createProject('My Factory'),
@@ -56,11 +70,10 @@ export const useProjectStore = create<ProjectState>()(
         },
         updateMachine: (id, patch) => setMachines((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m))),
         deleteMachines: (ids) =>
-          setLayout((l) => ({
-            ...l,
-            machines: l.machines.filter((m) => !ids.includes(m.id)),
-            flows: l.flows.filter((f) => !ids.includes(f.fromMachineId) && !ids.includes(f.toMachineId)),
-          })),
+          setLayout((l) => {
+            const workflow = removeMachineFromWorkflow(l.workflow, ids);
+            return { ...l, machines: l.machines.filter((m) => !ids.includes(m.id)), workflow, flows: deriveFlows(workflow) };
+          }),
         duplicateMachine(id) {
           const src = activeLayout(get().project).machines.find((m) => m.id === id);
           if (!src) return null;
@@ -112,6 +125,41 @@ export const useProjectStore = create<ProjectState>()(
             else delete typeModels[typeId];
             return { ...p, typeModels };
           }),
+        addStep(name) {
+          const id = newId();
+          setWorkflow((w) => [...w, { id, name: name ?? `Step ${w.length + 1}`, machineIds: [] }]);
+          return id;
+        },
+        updateStep: (id, patch) => setWorkflow((w) => w.map((s) => (s.id === id ? { ...s, ...patch } : s))),
+        moveStep: (id, dir) =>
+          setWorkflow((w) => {
+            const i = w.findIndex((s) => s.id === id), j = i + dir;
+            if (i < 0 || j < 0 || j >= w.length) return w;
+            const next = [...w];
+            [next[i], next[j]] = [next[j], next[i]];
+            return next;
+          }),
+        removeStep: (id) => setWorkflow((w) => w.filter((s) => s.id !== id)),
+        assignToStep: (stepId, machineId) =>
+          setWorkflow((w, l) => {
+            const m = l.machines.find((x) => x.id === machineId);
+            if (!m) return w;
+            return w.map((s) =>
+              s.id !== stepId || s.machineIds.includes(machineId) ? s : { ...s, typeId: s.typeId ?? m.typeId, machineIds: [...s.machineIds, machineId] },
+            );
+          }),
+        applyWorkflowTemplate(templateId) {
+          const t = allWorkflowTemplates(get().project).find((x) => x.id === templateId);
+          if (t) setWorkflow((_, l) => applyTemplate(t, l.machines));
+        },
+        saveWorkflowTemplate: (name) =>
+          setProj((p) => ({
+            ...p,
+            workflowTemplates: [
+              ...p.workflowTemplates,
+              { id: newId(), name, steps: activeLayout(p).workflow.map((s) => ({ name: s.name, typeId: s.typeId })) },
+            ],
+          })),
       };
     },
     { limit: 200, partialize: (s) => ({ project: s.project }) },
