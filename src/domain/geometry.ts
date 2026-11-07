@@ -96,3 +96,13 @@ export function operatorRect(m: Machine): Rect | null {
 export function rectArea(r: Rect): number {
   return r.length * r.width;
 }
+
+/** Round to the nearest multiple of step (step 0 = no snapping), trimming float noise. */
+export function snapTo(v: number, step: number): number {
+  return step > 0 ? +(Math.round(v / step) * step).toFixed(4) : +v.toFixed(4);
+}
+
+/** Normalise an angle to [0, 360). */
+export function normDeg(d: number): number {
+  return +(((d % 360) + 360) % 360).toFixed(4);
+}

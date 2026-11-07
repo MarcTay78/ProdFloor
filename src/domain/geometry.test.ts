@@ -1,9 +1,21 @@
 import { describe, expect, test } from 'vitest';
 import { CATALOGUE, createMachine } from './catalogue';
 import {
-  boxRect, clearanceRect, localToWorld, machineRect, operatorRect, polygonInsideBox,
-  rectCorners, rectsOverlap, segmentRect,
+  boxRect, clearanceRect, localToWorld, machineRect, normDeg, operatorRect, polygonInsideBox,
+  rectCorners, rectsOverlap, segmentRect, snapTo,
 } from './geometry';
+
+describe('snapTo / normDeg', () => {
+  test('snapTo', () => {
+    expect(snapTo(1.234, 0.1)).toBe(1.2);
+    expect(snapTo(0.3000000004, 0.1)).toBe(0.3);
+    expect(snapTo(1.23456, 0)).toBe(1.2346);
+  });
+  test('normDeg', () => {
+    expect(normDeg(-90)).toBe(270);
+    expect(normDeg(720)).toBe(0);
+  });
+});
 
 const near = (a: number, b: number) => expect(a).toBeCloseTo(b, 6);
 const sq = (cx: number, cy: number, rotation = 0) => ({ cx, cy, length: 1, width: 1, rotation });
