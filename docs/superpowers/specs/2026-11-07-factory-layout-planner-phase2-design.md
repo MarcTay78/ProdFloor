@@ -60,7 +60,7 @@ Rules:
 ### `src/domain/workflow.ts`
 - `WORKFLOW_TEMPLATES: WorkflowTemplate[]`
   - "White part": the existing `WHITE_PART_STEPS` (13 steps).
-  - "Full chair": white part, then `assembly-station`, `glue-station`, `spray-booth`, `drying-room`, `packing-station`, `finished-goods-rack`.
+  - "Full chair": white part, then `glue-station`, `assembly-station`, `spray-booth`, `drying-room`, `packing-station`, `finished-goods-rack`.
 - `deriveFlows(workflow: WorkflowStep[]): FlowLink[]`
 - `applyTemplate(template, machines): WorkflowStep[]` — one step per template step; every placed machine whose `typeId` matches joins that step. Unmatched steps stay empty.
 - `workflowFromFlows(machines, flows): { workflow: WorkflowStep[]; dropped: number }` — migration. One step per machine in topological order of the flow graph (name = machine name, typeId = machine type). Links that do not fit a single chain are dropped and counted.
@@ -92,9 +92,9 @@ Existing `CLEARANCE_INTRUSION` is unchanged.
 Workflow tab:
 - Header: **Load template** dropdown (built-ins and project templates; replaces current steps after confirm), **Save as template**, **Add step**.
 - One row per step: number, editable name, machine chips (click selects the machine; × removes it from the step), **+ selected** (adds the selected machine(s)), ↑ ↓ reorder, delete. Empty steps shown amber with "no machine".
-- Between rows: transition distance, e.g. `→ 6.40 m (straight 5.10 m)`. With parallel machines the value is the mean; hover lists each link.
+- Between rows: transition distance, e.g. `→ 6.40 m (straight 5.10 m)`. With parallel machines the value is the mean; hover shows how many links it averages.
 - Footer: **Total movement** Manhattan total, straight total in brackets; "—" when not computable.
-- Clicking a step name selects all its machines.
+- Clicking a step number focuses its first machine (selection is single).
 
 ### Bottom status bar
 - "Space utilisation" becomes a thin stacked bar (footprint, operator, clearance, keep-clear, free). Hover shows m² and % per part and footprint per category.
@@ -111,12 +111,13 @@ Workflow tab:
 - Operator areas involved in `OPERATOR_BLOCKED` are drawn red on every machine, not only the selected one.
 
 ### Store actions
-`setWorkflow`, `addStep`, `updateStep`, `moveStep`, `removeStep`, `assignToStep`, `applyTemplate`, `saveTemplate`. Each writes `workflow` and re-derived `flows` in one set (one undo entry). Machine delete calls `removeMachineFromWorkflow` and re-derives flows. Layout duplicate remaps workflow machine ids to the copied machines.
+`setWorkflow`, `addStep`, `updateStep`, `moveStep`, `removeStep`, `assignToStep`, `applyTemplate`, `saveTemplate`. Each writes `workflow` and re-derived `flows` in one set (one undo entry). Machine delete calls `removeMachineFromWorkflow` and re-derives flows. Layout duplicate keeps machine ids (as in Phase 1), so the copied workflow stays valid with no remapping.
 
 Analysis results are memoised on the layout object; layout changes only on drop, so analysis never runs per drag frame.
 
 ## 6. Migration and edge cases
 
+- The same migration (`migrateProject`) runs for imported files and for projects loaded from browser storage.
 - Missing `workflow` on load: built with `workflowFromFlows`; when links were dropped, the import shows a notice with the count. Missing `workflowTemplates`: `[]`.
 - Step `machineIds` referring to machines not in the layout are stripped on load with a notice (not an error). Duplicate step ids are an import error.
 - Deleting a machine leaves its step in place (empty step warning).
