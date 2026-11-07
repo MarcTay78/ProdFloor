@@ -25,9 +25,10 @@ interface Props {
   flat: boolean;
   showModel: boolean;
   showLabel: boolean;
+  operatorBlocked: boolean;
 }
 
-export const MachineInstance = memo(function MachineInstance({ machine: m, project, status, selected, flat, showModel, showLabel }: Props) {
+export const MachineInstance = memo(function MachineInstance({ machine: m, project, status, selected, flat, showModel, showLabel, operatorBlocked }: Props) {
   const startDrag = useMachineDrag();
   const type = findType(project, m.typeId);
   const Model = getModel(type?.model ?? 'generic');
@@ -65,7 +66,7 @@ export const MachineInstance = memo(function MachineInstance({ machine: m, proje
         )}
         {selected && <LocalOverlays m={m} h={flat ? 0.05 : m.height} startDrag={startDrag} />}
       </group>
-      {selected && <WorldOverlays m={m} />}
+      {(selected || operatorBlocked) && <WorldOverlays m={m} showClearance={selected} blocked={operatorBlocked} />}
     </>
   );
 });
@@ -104,12 +105,12 @@ function LocalOverlays({ m, h, startDrag }: { m: Machine; h: number; startDrag: 
   );
 }
 
-function WorldOverlays({ m }: { m: Machine }) {
+function WorldOverlays({ m, showClearance, blocked }: { m: Machine; showClearance: boolean; blocked: boolean }) {
   const op = operatorRect(m);
   return (
     <>
-      <FloorRect r={clearanceRect(m)} color="#3b82f6" opacity={0.08} dashed y={0.008} />
-      {op && <FloorRect r={op} color="#22c55e" opacity={0.25} y={0.01} />}
+      {showClearance && <FloorRect r={clearanceRect(m)} color="#3b82f6" opacity={0.08} dashed y={0.008} />}
+      {op && <FloorRect r={op} color={blocked ? '#ef4444' : '#22c55e'} opacity={blocked ? 0.35 : 0.25} y={0.01} />}
     </>
   );
 }

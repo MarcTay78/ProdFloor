@@ -120,17 +120,19 @@ function Lights({ factory, flat }: { factory: Factory; flat: boolean }) {
 export function FactoryCanvas() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
-  const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, select, setCanvasEl } = useUiStore();
+  const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, showFlows, select, setCanvasEl } = useUiStore();
   const layout = activeLayout(project);
   const flat = viewMode === '2d';
   const shownMachines = layout.machines.map((m) => (dragPreview?.id === m.id ? { ...m, ...dragPreview } : m));
 
-  const status = useMemo(() => {
+  const { status, operatorBlocked } = useMemo(() => {
     const s = new Map<string, MachineStatus>();
+    const blocked = new Set<string>();
     for (const w of validateLayout(layout)) {
       for (const id of w.machineIds) if (s.get(id) !== 'error') s.set(id, w.severity === 'error' ? 'error' : 'warning');
+      if (w.code === 'OPERATOR_BLOCKED') blocked.add(w.machineIds[0]);
     }
-    return s;
+    return { status: s, operatorBlocked: blocked };
   }, [layout]);
 
   const onDrop = (e: DragEvent) => {
@@ -156,7 +158,7 @@ export function FactoryCanvas() {
         <CameraRig factory={layout.factory} machines={layout.machines} />
         <Lights factory={layout.factory} flat={flat} />
         <FactoryShell factory={layout.factory} flat={flat} />
-        <FlowArrows flows={layout.flows} machines={shownMachines} showNumbers={showLabels} />
+        {showFlows && <FlowArrows flows={layout.flows} machines={shownMachines} showNumbers={showLabels} />}
         {layout.machines.map((m, i) => {
           const shown = shownMachines[i];
           return (
@@ -169,6 +171,7 @@ export function FactoryCanvas() {
               flat={flat}
               showModel={!flat || showModelsIn2d}
               showLabel={showLabels}
+              operatorBlocked={operatorBlocked.has(m.id)}
             />
           );
         })}

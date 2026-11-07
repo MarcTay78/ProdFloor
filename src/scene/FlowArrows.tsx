@@ -1,4 +1,5 @@
 import { Html, Line } from '@react-three/drei';
+import { linkDistance } from '../domain/analysis';
 import { localToWorld } from '../domain/geometry';
 import type { FlowLink, Machine } from '../domain/types';
 import { toThree } from './coords';
@@ -11,7 +12,7 @@ export function FlowArrows({ flows, machines, showNumbers }: { flows: FlowLink[]
   const byId = new Map(machines.map((m) => [m.id, m]));
   return (
     <group raycast={() => null}>
-      {flows.map((f, i) => {
+      {flows.map((f) => {
         const a = byId.get(f.fromMachineId), b = byId.get(f.toMachineId);
         if (!a || !b) return null;
         const p = localToWorld(a, a.outputPoint), q = localToWorld(b, b.inputPoint);
@@ -28,8 +29,8 @@ export function FlowArrows({ flows, machines, showNumbers }: { flows: FlowLink[]
               <meshBasicMaterial color={COLOR} />
             </mesh>
             {showNumbers && (
-              <Html zIndexRange={[5, 0]} position={toThree(p.x, p.y, Y + 0.3)} center className="pointer-events-none select-none rounded-full bg-orange-600 px-1.5 text-[10px] font-semibold text-white">
-                {i + 1}
+              <Html zIndexRange={[5, 0]} position={toThree((p.x + q.x) / 2, (p.y + q.y) / 2, Y + 0.3)} center className="pointer-events-none select-none whitespace-nowrap rounded-full bg-orange-600 px-1.5 text-[10px] font-semibold text-white">
+                {f.label ?? '•'} · {linkDistance(a, b).manhattan.toFixed(1)} m
               </Html>
             )}
           </group>

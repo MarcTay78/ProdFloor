@@ -54,6 +54,7 @@ export function TopToolbar() {
       <button className={ui.showWalls ? btnOn : btn} onClick={() => ui.toggle('showWalls')}>Walls</button>
       <button className={ui.showLabels ? btnOn : btn} onClick={() => ui.toggle('showLabels')}>Labels</button>
       <button className={ui.showGrid ? btnOn : btn} onClick={() => ui.toggle('showGrid')}>Grid</button>
+      <button className={ui.showFlows ? btnOn : btn} onClick={() => ui.toggle('showFlows')}>Flows</button>
       {ui.viewMode === '2d' && (
         <button className={ui.showModelsIn2d ? btnOn : btn} onClick={() => ui.toggle('showModelsIn2d')}>Models</button>
       )}
