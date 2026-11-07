@@ -67,11 +67,25 @@ export interface Factory {
 
 export interface FlowLink { id: string; fromMachineId: string; toMachineId: string; label?: string }
 
+export interface WorkflowStep {
+  id: string;
+  name: string;
+  /** Hint for template auto-assign and "save as template". */
+  typeId?: string;
+  /** 0, 1 or several machines; several = parallel machines. */
+  machineIds: string[];
+}
+
+export interface WorkflowTemplate { id: string; name: string; steps: { name: string; typeId?: string }[] }
+
 export interface Layout {
   id: string;
   name: string;
   factory: Factory;
   machines: Machine[];
+  /** Ordered process steps; source of truth for flows. */
+  workflow: WorkflowStep[];
+  /** Derived from workflow by deriveFlows; stored for the scene and the file format. */
   flows: FlowLink[];
 }
 
@@ -82,6 +96,7 @@ export interface Project {
   updatedAt: string;
   customTypes: MachineType[];
   typeModels: Record<string, string>;
+  workflowTemplates: WorkflowTemplate[];
   layouts: Layout[];
   activeLayoutId: string;
 }

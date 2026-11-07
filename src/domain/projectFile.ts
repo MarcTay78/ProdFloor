@@ -19,13 +19,13 @@ export function createFactory(): Factory {
 }
 
 export function createLayout(name = 'Layout 1', factory: Factory = createFactory()): Layout {
-  return { id: newId(), name, factory, machines: [], flows: [] };
+  return { id: newId(), name, factory, machines: [], workflow: [], flows: [] };
 }
 
 export function createProject(name: string): Project {
   const layout = createLayout();
   const now = new Date().toISOString();
-  return { id: newId(), name, createdAt: now, updatedAt: now, customTypes: [], typeModels: {}, layouts: [layout], activeLayoutId: layout.id };
+  return { id: newId(), name, createdAt: now, updatedAt: now, customTypes: [], typeModels: {}, workflowTemplates: [], layouts: [layout], activeLayoutId: layout.id };
 }
 
 export function asNewProject(project: Project, name = project.name): Project {
