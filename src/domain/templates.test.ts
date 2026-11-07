@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { CATALOGUE } from './catalogue';
 import { createFactory } from './projectFile';
-import { WHITE_PART_STEPS, WHITE_PART_SUPPORT, createWhitePartLayout } from './templates';
+import { FULL_CHAIR_STEPS, WHITE_PART_STEPS, WHITE_PART_SUPPORT, WORKFLOW_TEMPLATES, allWorkflowTemplates, createWhitePartLayout } from './templates';
 import { validateLayout } from './validation';
 
 describe('white part template', () => {
@@ -32,5 +33,30 @@ describe('white part template', () => {
     const l = createWhitePartLayout(f, { customTypes: [] });
     expect(l.machines.every((m) => m.rotation === 0)).toBe(true);
     expect(validateLayout(l)).toEqual([]);
+  });
+});
+
+describe('workflow templates', () => {
+  test('built-ins reference real catalogue types', () => {
+    const ids = new Set(CATALOGUE.map((t) => t.id));
+    expect(WORKFLOW_TEMPLATES.map((t) => t.id)).toEqual(['white-part', 'full-chair']);
+    for (const t of WORKFLOW_TEMPLATES) for (const s of t.steps) expect(ids.has(s.typeId!)).toBe(true);
+    expect(FULL_CHAIR_STEPS.slice(0, WHITE_PART_STEPS.length)).toEqual(WHITE_PART_STEPS);
+  });
+
+  test('step names come from the catalogue', () => {
+    expect(WORKFLOW_TEMPLATES[0].steps[1]).toEqual({ name: 'Rip saw', typeId: 'rip-saw' });
+  });
+
+  test('project templates are listed after built-ins', () => {
+    const mine = { id: 'm', name: 'Mine', steps: [] };
+    expect(allWorkflowTemplates({ workflowTemplates: [mine] }).map((t) => t.id)).toEqual(['white-part', 'full-chair', 'm']);
+  });
+
+  test('white-part layout has one step per line machine and numbered flows', () => {
+    const l = createWhitePartLayout(createFactory(), { customTypes: [] });
+    expect(l.workflow).toHaveLength(WHITE_PART_STEPS.length);
+    l.workflow.forEach((s, i) => expect(s.machineIds).toEqual([l.machines[i].id]));
+    expect(l.flows.map((f) => f.label)).toEqual(WHITE_PART_STEPS.slice(1).map((_, i) => String(i + 1)));
   });
 });

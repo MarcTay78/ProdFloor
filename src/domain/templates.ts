@@ -1,6 +1,7 @@
-import { createMachine, findType, newId } from './catalogue';
+import { CATALOGUE, createMachine, findType } from './catalogue';
 import { createLayout } from './projectFile';
-import type { Factory, Layout, Machine, Project } from './types';
+import type { Factory, Layout, Machine, Project, WorkflowTemplate } from './types';
+import { applyTemplate, deriveFlows } from './workflow';
 
 /**
  * White-part production: timber in, machined and sanded chair components (unassembled, unfinished) out.
@@ -24,6 +25,32 @@ export const WHITE_PART_STEPS = [
 
 /** Support equipment placed off the line. */
 export const WHITE_PART_SUPPORT = ['dust-collector', 'air-compressor'];
+
+/** Whole chair: white parts, then glue-up, assembly, finishing and packing. */
+export const FULL_CHAIR_STEPS = [
+  ...WHITE_PART_STEPS,
+  'glue-station',
+  'assembly-station',
+  'spray-booth',
+  'drying-room',
+  'packing-station',
+  'finished-goods-rack',
+];
+
+const templateOf = (id: string, name: string, typeIds: string[]): WorkflowTemplate => ({
+  id, name,
+  steps: typeIds.map((t) => ({ name: CATALOGUE.find((c) => c.id === t)?.name ?? t, typeId: t })),
+});
+
+/** Built-in, read-only workflow templates. */
+export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
+  templateOf('white-part', 'White part', WHITE_PART_STEPS),
+  templateOf('full-chair', 'Full chair', FULL_CHAIR_STEPS),
+];
+
+export function allWorkflowTemplates(project: Pick<Project, 'workflowTemplates'>): WorkflowTemplate[] {
+  return [...WORKFLOW_TEMPLATES, ...project.workflowTemplates];
+}
 
 const WALL_MARGIN = 1.0;   // free strip along walls
 const WALKWAY = 0.6;       // extra gap between neighbouring machines beyond their clearance
@@ -97,6 +124,7 @@ export function createWhitePartLayout(factory: Factory, project: Pick<Project, '
   });
 
   layout.machines = [...steps, ...support];
-  layout.flows = steps.slice(1).map((m, i) => ({ id: newId(), fromMachineId: steps[i].id, toMachineId: m.id }));
+  layout.workflow = applyTemplate(WORKFLOW_TEMPLATES[0], steps);
+  layout.flows = deriveFlows(layout.workflow);
   return layout;
 }
