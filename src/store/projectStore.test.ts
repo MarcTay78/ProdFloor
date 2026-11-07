@@ -33,6 +33,17 @@ describe('machines', () => {
   });
 });
 
+describe('white part template', () => {
+  test('adds and activates a linked layout; deleting a machine drops its flows', () => {
+    s().addWhitePartLayout();
+    expect(s().project.layouts).toHaveLength(2);
+    expect(layout().name).toBe('White part production');
+    const before = layout().flows.length;
+    s().deleteMachines([layout().machines[1].id]);
+    expect(layout().flows).toHaveLength(before - 2);
+  });
+});
+
 describe('factory', () => {
   test('updateFactory and items', () => {
     s().updateFactory({ length: 55 });

@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { DrillPress, MultiBoring } from './drilling';
 import { Mortiser, Tenoner } from './joinery';
 import type { ModelProps } from './parts';
+import { FourSidedMoulder, SurfacePlaner, ThicknessPlaner } from './planing';
 import { DryingRoom, SprayBooth } from './rooms';
 import { BeltSander, DiscSander, ProfileSander, WideBeltSander } from './sanding';
 import { Bandsaw, CrosscutSaw, RipSaw, TableSaw } from './saws';
@@ -21,6 +22,9 @@ export const MODELS: Record<string, FC<ModelProps>> = {
   'table-saw': TableSaw,
   'crosscut-saw': CrosscutSaw,
   'rip-saw': RipSaw,
+  'surface-planer': SurfacePlaner,
+  'thickness-planer': ThicknessPlaner,
+  'four-sided-moulder': FourSidedMoulder,
   mortiser: Mortiser,
   tenoner: Tenoner,
   'spindle-moulder': SpindleMoulder,
@@ -48,6 +52,7 @@ export const MODEL_LABELS: Record<string, string> = {
   generic: 'Generic machine',
   'raw-timber-rack': 'Cantilever timber rack', 'wip-rack': 'Shelf rack', 'finished-goods-rack': 'Pallet rack',
   bandsaw: 'Bandsaw', 'table-saw': 'Table / panel saw', 'crosscut-saw': 'Crosscut saw', 'rip-saw': 'Rip saw',
+  'surface-planer': 'Surface planer', 'thickness-planer': 'Thickness planer', 'four-sided-moulder': 'Four-sided moulder',
   mortiser: 'Mortiser', tenoner: 'Tenoner', 'spindle-moulder': 'Spindle moulder', router: 'Overhead router',
   'cnc-router': 'CNC router', shaper: 'Copy shaper', 'drill-press': 'Drill press', 'multi-boring': 'Multi-boring',
   'belt-sander': 'Belt sander', 'wide-belt-sander': 'Wide belt sander', 'disc-sander': 'Disc sander', 'profile-sander': 'Profile sander',

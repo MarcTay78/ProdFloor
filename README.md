@@ -43,6 +43,14 @@ Projects are saved automatically in **each user's own browser** (IndexedDB). Col
 - R rotate 90°, Ctrl+D duplicate, Delete remove, Ctrl+Z / Ctrl+Y undo / redo, Esc deselect.
 - Click a warning in the bottom panel to select and centre that machine.
 
+## White-part production template
+
+**+ White-part production line** (bottom of the machine library, or in Projects) adds a new layout in the current building with the machines needed to make white parts (machined, sanded chair components before assembly and finishing), linked in flow order and laid out as a U:
+
+Raw timber rack → rip saw → crosscut saw → four-sided moulder → bandsaw → mortiser → tenoner → multi-boring → copy shaper → wide belt sander → profile sander → inspection table → WIP rack, with dust collector and air compressor in the south-east corner.
+
+Everything stays editable afterwards. To change the default line, edit `WHITE_PART_STEPS` in `src/domain/templates.ts`.
+
 ## Extending
 
 - **New machine type:** add an entry to `CATALOGUE` in `src/domain/catalogue.ts`; optionally add a model component in `src/scene/models/` and register it in `src/scene/models/index.ts`. Models get `{ l, w, h }` in metres and must fill that box (front faces −z).

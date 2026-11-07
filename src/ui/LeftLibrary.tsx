@@ -9,6 +9,7 @@ export const MACHINE_TYPE_MIME = 'application/x-machine-type';
 export function LeftLibrary() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
+  const addWhitePartLayout = useProjectStore((s) => s.addWhitePartLayout);
   const { select, openDialog } = useUiStore();
   const [query, setQuery] = useState('');
   const [closed, setClosed] = useState<Record<string, boolean>>({});
@@ -71,7 +72,14 @@ export function LeftLibrary() {
         })}
         {!types.length && <p className="text-xs text-slate-500">No machines match "{query}".</p>}
       </div>
-      <div className="border-t border-slate-700 p-2">
+      <div className="space-y-1.5 border-t border-slate-700 p-2">
+        <button
+          className={`${btn} w-full`}
+          onClick={() => { addWhitePartLayout(); select(null); }}
+          title="Adds a new layout in this building with timber storage → cutting → planing → joinery → drilling → shaping → sanding → inspection → WIP, linked in order"
+        >
+          + White-part production line
+        </button>
         <button className={`${btn} w-full`} onClick={() => openDialog('customType')}>+ Custom machine type</button>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { MACHINE_TYPE_MIME } from '../ui/LeftLibrary';
 import { toThree } from './coords';
 import { SceneBridge, floorPoint } from './DragController';
 import { FactoryShell } from './FactoryShell';
+import { FlowArrows } from './FlowArrows';
 import { MachineInstance, type MachineStatus } from './MachineInstance';
 
 function CameraRig({ factory, machines }: { factory: Factory; machines: Machine[] }) {
@@ -122,6 +123,7 @@ export function FactoryCanvas() {
   const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, select, setCanvasEl } = useUiStore();
   const layout = activeLayout(project);
   const flat = viewMode === '2d';
+  const shownMachines = layout.machines.map((m) => (dragPreview?.id === m.id ? { ...m, ...dragPreview } : m));
 
   const status = useMemo(() => {
     const s = new Map<string, MachineStatus>();
@@ -154,8 +156,9 @@ export function FactoryCanvas() {
         <CameraRig factory={layout.factory} machines={layout.machines} />
         <Lights factory={layout.factory} flat={flat} />
         <FactoryShell factory={layout.factory} flat={flat} />
-        {layout.machines.map((m) => {
-          const shown = dragPreview?.id === m.id ? { ...m, ...dragPreview } : m;
+        <FlowArrows flows={layout.flows} machines={shownMachines} showNumbers={showLabels} />
+        {layout.machines.map((m, i) => {
+          const shown = shownMachines[i];
           return (
             <MachineInstance
               key={m.id}

@@ -1,5 +1,5 @@
 export type MachineCategory =
-  | 'storage' | 'cutting' | 'joinery' | 'shaping' | 'drilling'
+  | 'storage' | 'cutting' | 'planing' | 'joinery' | 'shaping' | 'drilling'
   | 'sanding' | 'assembly' | 'finishing' | 'utilities' | 'custom';
 
 export type ModelFormat = 'glb' | 'gltf' | 'obj' | 'stl' | 'fbx';

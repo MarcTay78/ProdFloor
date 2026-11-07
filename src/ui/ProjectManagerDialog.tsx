@@ -85,7 +85,10 @@ export function ProjectManagerDialog() {
           </div>
         ))}
       </div>
-      <button className={`${btn} mt-2`} onClick={() => store.addLayout()}>+ New empty layout (same building)</button>
+      <div className="mt-2 flex gap-2">
+        <button className={btn} onClick={() => store.addLayout()}>+ New empty layout (same building)</button>
+        <button className={btn} onClick={() => store.addWhitePartLayout()}>+ White-part production line</button>
+      </div>
     </Dialog>
   );
 }

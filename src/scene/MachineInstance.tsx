@@ -11,7 +11,7 @@ import { ImportedModel } from './ImportedModel';
 import { getModel } from './models';
 
 const CATEGORY_COLOR: Record<MachineCategory, string> = {
-  storage: '#64748b', cutting: '#0d9488', joinery: '#7c3aed', shaping: '#2563eb', drilling: '#0891b2',
+  storage: '#64748b', cutting: '#0d9488', planing: '#4d7c0f', joinery: '#7c3aed', shaping: '#2563eb', drilling: '#0891b2',
   sanding: '#ca8a04', assembly: '#16a34a', finishing: '#ea580c', utilities: '#475569', custom: '#a21caf',
 };
 

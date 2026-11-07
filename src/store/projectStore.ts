@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
+import { createWhitePartLayout } from '../domain/templates';
 import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Project } from '../domain/types';
 
 export const activeLayout = (p: Project): Layout =>
@@ -19,6 +20,8 @@ interface ProjectState {
   upsertFactoryItem<K extends FactoryItemKind>(kind: K, item: Factory[K][number]): void;
   removeFactoryItem(kind: FactoryItemKind, id: string): void;
   addLayout(name?: string): void;
+  /** New layout (current building) pre-filled with the white-part production line. */
+  addWhitePartLayout(): void;
   duplicateLayout(id: string): void;
   renameLayout(id: string, name: string): void;
   deleteLayout(id: string): void;
@@ -52,7 +55,12 @@ export const useProjectStore = create<ProjectState>()(
           return m.id;
         },
         updateMachine: (id, patch) => setMachines((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m))),
-        deleteMachines: (ids) => setMachines((ms) => ms.filter((m) => !ids.includes(m.id))),
+        deleteMachines: (ids) =>
+          setLayout((l) => ({
+            ...l,
+            machines: l.machines.filter((m) => !ids.includes(m.id)),
+            flows: l.flows.filter((f) => !ids.includes(f.fromMachineId) && !ids.includes(f.toMachineId)),
+          })),
         duplicateMachine(id) {
           const src = activeLayout(get().project).machines.find((m) => m.id === id);
           if (!src) return null;
@@ -74,6 +82,11 @@ export const useProjectStore = create<ProjectState>()(
         addLayout(name) {
           const p = get().project;
           const l = createLayout(name ?? `Layout ${p.layouts.length + 1}`, structuredClone(activeLayout(p).factory));
+          setProj((pp) => ({ ...pp, layouts: [...pp.layouts, l], activeLayoutId: l.id }));
+        },
+        addWhitePartLayout() {
+          const p = get().project;
+          const l = createWhitePartLayout(activeLayout(p).factory, p);
           setProj((pp) => ({ ...pp, layouts: [...pp.layouts, l], activeLayoutId: l.id }));
         },
         duplicateLayout(id) {

@@ -3,11 +3,11 @@ import type { Machine, MachineCategory, MachineType, Project } from './types';
 export const newId = (): string => crypto.randomUUID();
 
 export const CATEGORIES: MachineCategory[] = [
-  'storage', 'cutting', 'joinery', 'shaping', 'drilling', 'sanding', 'assembly', 'finishing', 'utilities', 'custom',
+  'storage', 'cutting', 'planing', 'joinery', 'shaping', 'drilling', 'sanding', 'assembly', 'finishing', 'utilities', 'custom',
 ];
 
 export const CATEGORY_LABELS: Record<MachineCategory, string> = {
-  storage: 'Storage', cutting: 'Cutting', joinery: 'Joinery', shaping: 'Shaping', drilling: 'Drilling',
+  storage: 'Storage', cutting: 'Cutting', planing: 'Planing', joinery: 'Joinery', shaping: 'Shaping', drilling: 'Drilling',
   sanding: 'Sanding', assembly: 'Assembly & Inspection', finishing: 'Finishing & Packing', utilities: 'Utilities', custom: 'Custom',
 };
 
@@ -36,6 +36,9 @@ export const CATALOGUE: MachineType[] = [
   t('table-saw', 'Table saw', 'cutting', 2.0, 1.6, 1.0),
   t('crosscut-saw', 'Crosscut saw', 'cutting', 4.0, 1.0, 1.6),
   t('rip-saw', 'Rip saw', 'cutting', 3.0, 1.2, 1.6),
+  t('surface-planer', 'Surface planer (jointer)', 'planing', 2.5, 0.8, 1.0),
+  t('thickness-planer', 'Thickness planer', 'planing', 1.6, 1.1, 1.3),
+  t('four-sided-moulder', 'Four-sided moulder', 'planing', 5.0, 1.6, 1.7),
   t('mortiser', 'Mortising machine', 'joinery', 1.2, 0.9, 1.7),
   t('tenoner', 'Tenon machine', 'joinery', 2.5, 1.6, 1.5),
   t('spindle-moulder', 'Spindle moulder', 'shaping', 1.4, 1.1, 1.2),
