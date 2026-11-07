@@ -42,7 +42,8 @@ export async function importProjectJson(): Promise<void> {
   await saveProject(project);
   openProject(project);
   useUiStore.getState().select(null);
-  useUiStore.getState().showToast(`Imported "${project.name}" as a new project`);
+  const extra = result.notices.length ? ` — ${result.notices.join('; ')}` : '';
+  useUiStore.getState().showToast(`Imported "${project.name}" as a new project${extra}`);
 }
 
 export function exportPng(): void {

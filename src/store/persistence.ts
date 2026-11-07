@@ -1,4 +1,5 @@
 import { del, get, set } from 'idb-keyval';
+import { migrateProject } from '../domain/projectFile';
 import type { ModelFormat, Project } from '../domain/types';
 import { useProjectStore } from './projectStore';
 import { useUiStore } from './uiStore';
@@ -17,7 +18,10 @@ export async function listProjects(): Promise<ProjectIndexEntry[]> {
   return (await readIndex()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export const loadProject = (id: string) => get<Project>(`project:${id}`);
+export const loadProject = async (id: string): Promise<Project | undefined> => {
+  const p = await get<Project>(`project:${id}`);
+  return p && migrateProject(p).project;
+};
 export const lastProjectId = () => get<string>(LAST);
 
 export async function saveProject(p: Project): Promise<void> {

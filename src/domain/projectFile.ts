@@ -1,4 +1,5 @@
 import { newId } from './catalogue';
+import { deriveFlows, workflowFromFlows } from './workflow';
 import type { Factory, Layout, Project, ProjectFile } from './types';
 
 export const SCHEMA_VERSION = 1;
@@ -38,20 +39,45 @@ export function serializeProject(project: Project, models?: ProjectFile['models'
   return JSON.stringify(file, null, 2);
 }
 
-export type ParseResult = { ok: true; file: ProjectFile } | { ok: false; errors: string[] };
+export type ParseResult = { ok: true; file: ProjectFile; notices: string[] } | { ok: false; errors: string[] };
 
-/** Fill collections added after a file was written. Bump SCHEMA_VERSION and add steps here for breaking changes. */
-function migrate(raw: any): any {
-  const p = raw.project;
+/**
+ * Fill collections added after a project was written (files and browser storage).
+ * Bump SCHEMA_VERSION and add steps here for breaking changes.
+ */
+export function migrateProject(project: Project): { project: Project; notices: string[] } {
+  const p: any = project;
+  const notices: string[] = [];
   p.customTypes ??= [];
   p.typeModels ??= {};
+  p.workflowTemplates ??= [];
   for (const l of p.layouts ?? []) {
     l.flows ??= [];
     l.machines ??= [];
     const f = l.factory ?? {};
     for (const k of ['internalWalls', 'doors', 'windows', 'pillars', 'restrictedZones']) f[k] ??= [];
+
+    if (!Array.isArray(l.workflow)) {
+      const r = workflowFromFlows(l.machines, l.flows);
+      l.workflow = r.workflow;
+      l.flows = deriveFlows(l.workflow);
+      if (r.dropped) notices.push(`Layout "${l.name}": ${r.dropped} flow link(s) did not fit one sequence and were dropped`);
+      continue;
+    }
+    const known = new Set(l.machines.map((m: any) => m.id));
+    let stripped = 0;
+    for (const s of l.workflow) {
+      if (!Array.isArray(s?.machineIds)) continue;
+      const kept = s.machineIds.filter((id: string) => known.has(id));
+      stripped += s.machineIds.length - kept.length;
+      s.machineIds = kept;
+    }
+    if (stripped) {
+      l.flows = deriveFlows(l.workflow);
+      notices.push(`Layout "${l.name}": removed ${stripped} unknown machine reference(s) from the workflow`);
+    }
   }
-  return raw;
+  return { project: p, notices };
 }
 
 const num = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
@@ -78,6 +104,13 @@ function validateProject(p: any): string[] {
         if (!num(m[k]) || m[k] < MIN_DIM) errors.push(`${mat}.${k} must be at least ${MIN_DIM} m`);
       }
     });
+    const stepIds = new Set<string>();
+    (l.workflow as any[]).forEach((s, si) => {
+      const sat = `${at}.workflow[${si}]`;
+      if (typeof s?.id !== 'string' || typeof s?.name !== 'string' || !Array.isArray(s?.machineIds)) errors.push(`${sat} needs id, name and machineIds`);
+      else if (stepIds.has(s.id)) errors.push(`${sat}: duplicate step id ${s.id}`);
+      else stepIds.add(s.id);
+    });
   });
   return errors;
 }
@@ -93,6 +126,7 @@ export function parseProjectFile(text: string): ParseResult {
     return { ok: false, errors: [`Unsupported schemaVersion ${raw?.schemaVersion}; this app reads version ${SCHEMA_VERSION}`] };
   }
   if (typeof raw.project !== 'object' || raw.project === null) return { ok: false, errors: ['File has no project'] };
-  const errors = validateProject(migrate(raw).project);
-  return errors.length ? { ok: false, errors } : { ok: true, file: raw as ProjectFile };
+  const { notices } = migrateProject(raw.project);
+  const errors = validateProject(raw.project);
+  return errors.length ? { ok: false, errors } : { ok: true, file: raw as ProjectFile, notices };
 }
