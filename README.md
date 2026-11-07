@@ -6,6 +6,15 @@ Phase 1 (this version): factory configuration (size, ceiling, walls, doors, wind
 
 Design and plan: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
+## Production flow and analysis (Phase 2)
+
+- **Workflow tab** (left panel): ordered process steps per layout. Load the built-in "White part" or "Full chair" template (machines of matching type are assigned automatically), add, rename, reorder (↑ ↓) and delete steps, and assign the selected machine with "+ selected". Several machines in one step run in parallel. Save your own step list as a project template.
+- Flow arrows are derived from the workflow, labelled with step number and Manhattan distance. Toggle them with **Flows**.
+- **Distances**: between consecutive steps, from output point to input point, Manhattan with straight-line in brackets; parallel machines use the mean. **Total movement** appears in the Workflow tab and the status bar.
+- **Space utilisation** bar: usable floor split into machine footprint, operator areas, clearance, door keep-clear and free space (hover for m², %, and footprint per category).
+- **Checks**: operator area blocked (error), operator areas overlapping, clearance or operator area crossing a wall, operator area in a door access zone, workflow step without a machine. Listed in the status bar and per machine in the inspector; blocked operator areas show red in the scene.
+- Projects from earlier versions open unchanged; flow links become one workflow step per machine.
+
 ## Run locally
 
 ```bash
