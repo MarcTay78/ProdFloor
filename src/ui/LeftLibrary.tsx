@@ -5,6 +5,7 @@ import { useUiStore } from '../store/uiStore';
 import { btn, input } from './Dialog';
 
 export const MACHINE_TYPE_MIME = 'application/x-machine-type';
+export const WORKER_MIME = 'application/x-worker';
 
 export function LeftLibrary() {
   const project = useProjectStore((s) => s.project);

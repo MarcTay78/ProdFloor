@@ -8,7 +8,7 @@ import type { Factory, Machine } from '../domain/types';
 import { validateLayout } from '../domain/validation';
 import { activeLayout, useProjectStore } from '../store/projectStore';
 import { useUiStore } from '../store/uiStore';
-import { MACHINE_TYPE_MIME } from '../ui/LeftLibrary';
+import { MACHINE_TYPE_MIME, WORKER_MIME } from '../ui/LeftLibrary';
 import { toThree } from './coords';
 import { SceneBridge, floorPoint } from './DragController';
 import { FactoryShell } from './FactoryShell';
@@ -16,6 +16,7 @@ import { AreaPatches } from './AreaPatches';
 import { FlowArrows } from './FlowArrows';
 import { PartsAnimation } from './PartsAnimation';
 import { MachineInstance, type MachineStatus } from './MachineInstance';
+import { WorkerFigure } from './WorkerFigure';
 
 function CameraRig({ factory, machines }: { factory: Factory; machines: Machine[] }) {
   const { viewMode, cameraPreset, cameraNonce, focusId, focusNonce } = useUiStore();
@@ -122,10 +123,12 @@ function Lights({ factory, flat }: { factory: Factory; flat: boolean }) {
 export function FactoryCanvas() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
+  const addWorker = useProjectStore((s) => s.addWorker);
   const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, showFlows, showAreas, animating, select, setCanvasEl } = useUiStore();
   const layout = activeLayout(project);
   const flat = viewMode === '2d';
   const shownMachines = layout.machines.map((m) => (dragPreview?.id === m.id ? { ...m, ...dragPreview } : m));
+  const shownWorkers = layout.workers.map((w) => (dragPreview?.id === w.id ? { ...w, x: dragPreview.x, y: dragPreview.y } : w));
 
   const { status, operatorBlocked } = useMemo(() => {
     const s = new Map<string, MachineStatus>();
@@ -139,19 +142,24 @@ export function FactoryCanvas() {
 
   const onDrop = (e: DragEvent) => {
     const typeId = e.dataTransfer.getData(MACHINE_TYPE_MIME);
-    if (!typeId) return;
+    const isWorker = e.dataTransfer.types.includes(WORKER_MIME);
+    if (!typeId && !isWorker) return;
     e.preventDefault();
     const p = floorPoint(e);
     if (!p) return;
     const snap = useUiStore.getState().snap;
-    const id = addMachine(typeId, snapTo(p.x, snap), snapTo(p.y, snap));
+    const at = { x: snapTo(p.x, snap), y: snapTo(p.y, snap) };
+    const id = isWorker ? addWorker(at) : addMachine(typeId, at.x, at.y);
     if (id) select(id);
   };
 
   return (
     <div
       className="relative h-full w-full"
-      onDragOver={(e) => { if (e.dataTransfer.types.includes(MACHINE_TYPE_MIME)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } }}
+      onDragOver={(e) => {
+        const t = e.dataTransfer.types;
+        if (t.includes(MACHINE_TYPE_MIME) || t.includes(WORKER_MIME)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+      }}
       onDrop={onDrop}
     >
       <Canvas shadows gl={{ preserveDrawingBuffer: true, antialias: true }} onCreated={({ gl }) => setCanvasEl(gl.domElement)}>
@@ -179,6 +187,9 @@ export function FactoryCanvas() {
             />
           );
         })}
+        {shownWorkers.map((w) => (
+          <WorkerFigure key={w.id} worker={w} machines={shownMachines} selected={w.id === selectedId} flat={flat} showLabel={showLabels} />
+        ))}
       </Canvas>
       <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-900/70 px-2 py-1 text-[11px] text-slate-300">
         {flat ? 'Plan view · drag to pan · scroll to zoom · north is up' : 'Left-drag rotate · right-drag pan · scroll zoom'}

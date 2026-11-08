@@ -2,7 +2,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { normDeg, snapTo } from '../domain/geometry';
-import type { Machine, Point2 } from '../domain/types';
+import type { Point2 } from '../domain/types';
 import { useProjectStore } from '../store/projectStore';
 import { useUiStore } from '../store/uiStore';
 
@@ -35,7 +35,7 @@ export function SceneBridge() {
 }
 
 /**
- * Start moving or rotating a machine from a pointer-down. Updates a UI preview while dragging
+ * Start moving or rotating a machine (or moving a worker, via commit) from a pointer-down. Updates a UI preview while dragging
  * and commits one store update (one undo step) on release.
  */
 export function useMachineDrag() {
@@ -44,7 +44,12 @@ export function useMachineDrag() {
   const gl = useThree((s) => s.gl);
 
   return useCallback(
-    (m: Machine, mode: 'move' | 'rotate', e: ThreeEvent<PointerEvent>) => {
+    (
+      m: { id: string; x: number; y: number; rotation?: number },
+      mode: 'move' | 'rotate',
+      e: ThreeEvent<PointerEvent>,
+      commit: (p: { x: number; y: number; rotation: number }) => void = (p) => useProjectStore.getState().updateMachine(m.id, p),
+    ) => {
       if (e.button !== 0) return;
       e.stopPropagation();
       const start = floorPoint(e.nativeEvent, camera, gl.domElement);
@@ -52,9 +57,10 @@ export function useMachineDrag() {
       if (controls) controls.enabled = false;
       const ui = useUiStore.getState();
       ui.select(m.id);
+      const rot0 = m.rotation ?? 0;
       const offset = { x: m.x - start.x, y: m.y - start.y };
       const startAngle = Math.atan2(start.y - m.y, start.x - m.x);
-      let preview = { id: m.id, x: m.x, y: m.y, rotation: m.rotation };
+      let preview = { id: m.id, x: m.x, y: m.y, rotation: rot0 };
 
       const move = (ev: PointerEvent) => {
         const p = floorPoint(ev, camera, gl.domElement);
@@ -65,7 +71,7 @@ export function useMachineDrag() {
         } else {
           const delta = ((Math.atan2(p.y - m.y, p.x - m.x) - startAngle) * 180) / Math.PI;
           const step = ev.shiftKey ? 1 : 15;
-          preview = { ...preview, rotation: normDeg(Math.round((m.rotation + delta) / step) * step) };
+          preview = { ...preview, rotation: normDeg(Math.round((rot0 + delta) / step) * step) };
         }
         useUiStore.getState().setDragPreview(preview);
       };
@@ -74,8 +80,8 @@ export function useMachineDrag() {
         window.removeEventListener('pointerup', up);
         useUiStore.getState().setDragPreview(null);
         if (controls) controls.enabled = true;
-        if (preview.x !== m.x || preview.y !== m.y || preview.rotation !== m.rotation) {
-          useProjectStore.getState().updateMachine(m.id, { x: preview.x, y: preview.y, rotation: preview.rotation });
+        if (preview.x !== m.x || preview.y !== m.y || preview.rotation !== rot0) {
+          commit({ x: preview.x, y: preview.y, rotation: preview.rotation });
         }
       };
       window.addEventListener('pointermove', move);
