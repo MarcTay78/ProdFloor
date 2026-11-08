@@ -57,6 +57,7 @@ Projects are saved automatically in **each user's own browser** (IndexedDB). Col
 - Drag a machine to move it (snap set in toolbar; hold Alt for free movement). Drag the blue ring to rotate (15° steps; Shift for 1°).
 - R rotate 90°, Ctrl+D duplicate, Delete remove, Ctrl+Z / Ctrl+Y undo / redo, Esc deselect.
 - Click a warning in the bottom panel to select and centre that machine.
+- The small arrows on the edges of the 3D view hide or show the left panel, the inspector and the status bar. **Full view** (toolbar, or F) hides all three and switches the browser to full screen; press it again, F, or Esc to return.
 
 ## White-part production template
 

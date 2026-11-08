@@ -1,7 +1,7 @@
 import { useStore } from 'zustand';
 import { saveNow } from '../store/persistence';
 import { redo, undo, useProjectStore } from '../store/projectStore';
-import { useUiStore, type CameraPreset } from '../store/uiStore';
+import { isFullView, toggleFullView, useUiStore, type CameraPreset } from '../store/uiStore';
 import { btn, btnOn, input } from './Dialog';
 import { exportPng, exportProjectJson, importProjectJson } from './projectIO';
 
@@ -16,6 +16,7 @@ export function TopToolbar() {
   const past = useStore(useProjectStore.temporal, (s) => s.pastStates.length);
   const future = useStore(useProjectStore.temporal, (s) => s.futureStates.length);
   const ui = useUiStore();
+  const fullView = isFullView(ui);
   const savedAt = ui.savedAt ? new Date(ui.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
@@ -45,6 +46,10 @@ export function TopToolbar() {
       <button className={btn} onClick={importProjectJson}>Import JSON</button>
       <button className={btn} onClick={exportPng}>PNG</button>
       <div className="flex-1" />
+      <button className={fullView ? btnOn : btn} onClick={toggleFullView} title="Hide all panels and go full screen (F)">
+        {fullView ? '⤡ Exit full view' : '⤢ Full view'}
+      </button>
+      <Sep />
       <button className={ui.viewMode === '2d' ? btnOn : btn} onClick={() => ui.setViewMode('2d')}>2D</button>
       <button className={ui.viewMode === '3d' ? btnOn : btn} onClick={() => ui.setViewMode('3d')}>3D</button>
       <Sep />

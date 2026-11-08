@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { normDeg } from '../domain/geometry';
 import { activeLayout, redo, undo, useProjectStore } from '../store/projectStore';
-import { useUiStore } from '../store/uiStore';
+import { toggleFullView, useUiStore } from '../store/uiStore';
 
 export function useShortcuts(): void {
   useEffect(() => {
@@ -16,6 +16,7 @@ export function useShortcuts(): void {
       if (ctrl && key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if (ctrl && (key === 'y' || (key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); return; }
       if (e.key === 'Escape') { ui.select(null); return; }
+      if (!ctrl && !e.altKey && key === 'f') { toggleFullView(); return; }
       if (!id) return;
       const m = activeLayout(store.project).machines.find((x) => x.id === id);
       if (!m) return;

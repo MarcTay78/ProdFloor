@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'side';
-type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows';
+type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows' | 'showLeft' | 'showRight' | 'showBottom';
 export type DialogName = 'factory' | 'projects' | 'customType' | 'compare';
 export type LeftTab = 'library' | 'workflow' | 'suggestions';
 
@@ -21,6 +21,10 @@ interface UiState {
   showGrid: boolean;
   showModelsIn2d: boolean;
   showFlows: boolean;
+  showLeft: boolean;
+  showRight: boolean;
+  showBottom: boolean;
+  setPanels(open: boolean): void;
   leftTab: LeftTab;
   setLeftTab(t: LeftTab): void;
   toggle(key: ToggleKey): void;
@@ -56,6 +60,10 @@ export const useUiStore = create<UiState>()((set) => ({
   showGrid: true,
   showModelsIn2d: false,
   showFlows: true,
+  showLeft: true,
+  showRight: true,
+  showBottom: true,
+  setPanels: (open) => set({ showLeft: open, showRight: open, showBottom: open }),
   leftTab: 'library',
   setLeftTab: (leftTab) => set({ leftTab }),
   toggle: (key) => set((s) => ({ [key]: !s[key] }) as Partial<UiState>),
@@ -73,3 +81,21 @@ export const useUiStore = create<UiState>()((set) => ({
   canvasEl: null,
   setCanvasEl: (canvasEl) => set({ canvasEl }),
 }));
+
+export const isFullView = (s: Pick<UiState, 'showLeft' | 'showRight' | 'showBottom'>) => !s.showLeft && !s.showRight && !s.showBottom;
+
+/** Full view: hide every panel and ask the browser for full screen; calling again restores both. */
+export function toggleFullView(): void {
+  const ui = useUiStore.getState();
+  const enter = !isFullView(ui);
+  ui.setPanels(!enter);
+  if (enter) document.documentElement.requestFullscreen?.().catch(() => {});
+  else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+
+// Leaving browser full screen (Esc) also brings the panels back.
+if (typeof document !== 'undefined') {
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && isFullView(useUiStore.getState())) useUiStore.getState().setPanels(true);
+  });
+}
