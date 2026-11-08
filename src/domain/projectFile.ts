@@ -70,6 +70,8 @@ export function migrateProject(project: Project): { project: Project; notices: s
     let staleCrew = 0;
     for (const w of l.workers) {
       if (!w) continue;
+      if (typeof w.rotation !== 'number') w.rotation = 0;
+      if (w.path === undefined) w.path = [];
       if (!Array.isArray(w.machineIds)) { w.machineIds = []; continue; }
       const kept = w.machineIds.filter((id: string) => machineIds.has(id));
       staleCrew += w.machineIds.length - kept.length;
@@ -142,6 +144,7 @@ function validateProject(p: any): string[] {
     (l.workers as any[]).forEach((w, wi) => {
       const wat = `${at}.workers[${wi}]`;
       if (typeof w?.id !== 'string' || typeof w?.name !== 'string' || !num(w?.x) || !num(w?.y)) errors.push(`${wat} needs id, name, x and y`);
+      else if (!Array.isArray(w.path) || w.path.some((p: any) => !num(p?.x) || !num(p?.y))) errors.push(`${wat}.path must be a list of {x, y} points`);
       else if (workerIds.has(w.id)) errors.push(`${wat}: duplicate worker id ${w.id}`);
       else workerIds.add(w.id);
     });

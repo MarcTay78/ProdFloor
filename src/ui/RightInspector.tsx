@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allTypes, findType } from '../domain/catalogue';
 import { normDeg } from '../domain/geometry';
+import { pathLength } from '../domain/simulation';
 import type { Machine, Side, Worker } from '../domain/types';
 import { validateLayout } from '../domain/validation';
 import { loadModel } from '../store/persistence';
@@ -192,6 +193,8 @@ function WorkerPanel({ w }: { w: Worker }) {
   const project = useProjectStore((s) => s.project);
   const { updateWorker, removeWorker } = useProjectStore();
   const select = useUiStore((s) => s.select);
+  const editing = useUiStore((s) => s.pathEditId === w.id);
+  const setPathEdit = useUiStore((s) => s.setPathEdit);
   const layout = activeLayout(project);
   const toggle = (id: string) =>
     updateWorker(w.id, { machineIds: w.machineIds.includes(id) ? w.machineIds.filter((x) => x !== id) : [...w.machineIds, id] });
@@ -208,6 +211,22 @@ function WorkerPanel({ w }: { w: Worker }) {
       <div className="mt-2 space-y-1.5">
         <NumberField label="X (from west wall)" value={w.x} onCommit={(v) => updateWorker(w.id, { x: v })} />
         <NumberField label="Y (from south wall)" value={w.y} onCommit={(v) => updateWorker(w.id, { y: v })} />
+        <NumberField label="Rotation" unit="°" digits={1} value={w.rotation} onCommit={(v) => updateWorker(w.id, { rotation: normDeg(v) })} />
+      </div>
+      <div className="mt-3 border-t border-slate-800 pt-2">
+        <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Walking path</div>
+        <p className="text-xs text-slate-400">
+          {w.path.length
+            ? <>{w.path.length} point{w.path.length > 1 ? 's' : ''} · loop {pathLength(w).toFixed(1)} m</>
+            : 'No path. Edit path, then click the floor to add points; the worker walks the loop when you press Play.'}
+        </p>
+        <div className="mt-1.5 grid grid-cols-3 gap-1">
+          <button className={editing ? `${btn} border-sky-500 text-sky-300` : btn} onClick={() => setPathEdit(editing ? null : w.id)}>
+            {editing ? 'Done' : 'Edit path'}
+          </button>
+          <button className={btn} disabled={!w.path.length} onClick={() => updateWorker(w.id, { path: w.path.slice(0, -1) })}>Undo point</button>
+          <button className={btn} disabled={!w.path.length} onClick={() => updateWorker(w.id, { path: [] })}>Clear</button>
+        </div>
       </div>
       <div className="mt-3 border-t border-slate-800 pt-2">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Runs machines ({w.machineIds.length})</div>
