@@ -37,6 +37,7 @@ function masterSander(): MachineType {
 
 export const CATALOGUE: MachineType[] = [
   t('raw-timber-rack', 'Raw timber storage rack', 'storage', 6.0, 1.2, 3.0),
+  t('timber-pallet-stack', 'Raw timber on pallets', 'storage', 2.4, 2.3, 2.2),
   t('wip-rack', 'WIP storage rack', 'storage', 2.5, 1.0, 2.0),
   t('finished-goods-rack', 'Finished goods storage', 'storage', 6.0, 1.2, 3.0),
   t('bandsaw', 'Bandsaw', 'cutting', 1.2, 0.9, 2.1),

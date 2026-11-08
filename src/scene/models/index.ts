@@ -8,7 +8,7 @@ import { BeltSander, DiscSander, MasterSander, ProfileSander, WideBeltSander } f
 import { Bandsaw, CrosscutSaw, RipSaw, TableSaw } from './saws';
 import { CncRouter, Router, Shaper, SpindleMoulder } from './shaping';
 import { AssemblyStation, Generic, GlueStation, InspectionTable, PackingStation } from './stations';
-import { FinishedGoodsRack, TimberRack, WipRack } from './storage';
+import { FinishedGoodsRack, TimberPalletStack, TimberRack, WipRack } from './storage';
 import { AirCompressor, DustCollector } from './utilities';
 
 export type { ModelProps } from './parts';
@@ -16,6 +16,7 @@ export type { ModelProps } from './parts';
 /** Procedural model registry: model key -> component. To add a machine model, add a component and register it here. */
 export const MODELS: Record<string, FC<ModelProps>> = {
   'raw-timber-rack': TimberRack,
+  'timber-pallet-stack': TimberPalletStack,
   'wip-rack': WipRack,
   'finished-goods-rack': FinishedGoodsRack,
   bandsaw: Bandsaw,
@@ -52,7 +53,7 @@ export const MODELS: Record<string, FC<ModelProps>> = {
 
 export const MODEL_LABELS: Record<string, string> = {
   generic: 'Generic machine',
-  'raw-timber-rack': 'Cantilever timber rack', 'wip-rack': 'Shelf rack', 'finished-goods-rack': 'Pallet rack',
+  'raw-timber-rack': 'Cantilever timber rack', 'timber-pallet-stack': 'Timber bundles on pallet', 'wip-rack': 'Shelf rack', 'finished-goods-rack': 'Pallet rack',
   bandsaw: 'Bandsaw', 'table-saw': 'Table / panel saw', 'crosscut-saw': 'Crosscut saw', 'rip-saw': 'Rip saw',
   'surface-planer': 'Surface planer', 'thickness-planer': 'Thickness planer', 'four-sided-moulder': 'Four-sided moulder',
   mortiser: 'Mortiser', 'cnc-mortiser': 'CNC mortiser', tenoner: 'Tenoner', 'spindle-moulder': 'Spindle moulder', router: 'Overhead router',
