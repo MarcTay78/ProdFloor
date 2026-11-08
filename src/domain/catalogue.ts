@@ -11,35 +11,27 @@ export const CATEGORY_LABELS: Record<MachineCategory, string> = {
   sanding: 'Sanding', assembly: 'Assembly & Inspection', finishing: 'Finishing & Packing', utilities: 'Utilities', custom: 'Custom',
 };
 
+/** Operator side: 'front' (default) or 'infeed' for machines fed by hand at the input end (domain side 'left'). */
 function t(
   id: string, name: string, category: MachineCategory,
   length: number, width: number, height: number,
-  opts: { clearance?: number; operator?: boolean } = {},
+  opts: { clearance?: number; operator?: boolean; operatorAt?: 'front' | 'infeed' } = {},
 ): MachineType {
   const c = opts.clearance ?? 0.6;
   const operator = opts.operator ?? true;
+  const infeed = opts.operatorAt === 'infeed';
   return {
     id, name, category, model: id,
     defaults: {
       length, width, height,
       clearance: { front: c, back: c, left: c, right: c },
-      operatorArea: { side: 'front', depth: operator ? 0.9 : 0, width: operator ? Math.min(length, 2) : 0 },
+      operatorArea: {
+        side: infeed ? 'left' : 'front',
+        depth: operator ? 0.9 : 0,
+        width: operator ? Math.min(infeed ? width : length, 2) : 0,
+      },
     },
   };
-}
-
-/** Wide-belt "master" sander: parts are fed in over the infeed table at the input end, so the operator stands there (left = input side). */
-function masterSander(): MachineType {
-  const type = t('master-sander', 'Master sanding machine', 'sanding', 1.5, 1.6, 2.0);
-  type.defaults.operatorArea = { side: 'left', depth: 0.9, width: 1.6 };
-  return type;
-}
-
-/** Double-end trim saw: boards are fed through between the two heads, so the operator stands at the infeed (left) side. */
-function doubleEndSaw(): MachineType {
-  const type = t('double-end-saw', 'Double-end cutting machine', 'cutting', 1.3, 2.6, 1.6);
-  type.defaults.operatorArea = { side: 'left', depth: 0.9, width: 2.0 };
-  return type;
 }
 
 export const CATALOGUE: MachineType[] = [
@@ -50,7 +42,7 @@ export const CATALOGUE: MachineType[] = [
   t('bandsaw', 'Bandsaw', 'cutting', 1.2, 0.9, 2.1),
   t('table-saw', 'Table saw', 'cutting', 2.0, 1.6, 1.0),
   t('crosscut-saw', 'Crosscut saw', 'cutting', 4.0, 1.0, 1.6),
-  doubleEndSaw(),
+  t('double-end-saw', 'Double-end cutting machine', 'cutting', 1.3, 2.6, 1.6, { operatorAt: 'infeed' }),
   t('rip-saw', 'Rip saw', 'cutting', 3.0, 1.2, 1.6),
   t('surface-planer', 'Surface planer (jointer)', 'planing', 2.5, 0.8, 1.0),
   t('thickness-planer', 'Thickness planer', 'planing', 1.6, 1.1, 1.3),
@@ -61,12 +53,13 @@ export const CATALOGUE: MachineType[] = [
   t('spindle-moulder', 'Spindle moulder', 'shaping', 1.4, 1.1, 1.2),
   t('router', 'Router', 'shaping', 1.3, 1.1, 1.8),
   t('cnc-router', 'CNC woodworking machine', 'shaping', 4.0, 2.2, 2.0),
+  t('chair-apron-cnc', 'CNC auto chair apron machine', 'shaping', 4.2, 1.6, 1.8, { operatorAt: 'infeed' }),
   t('shaper', 'Wood shaping machine', 'shaping', 1.5, 1.2, 1.6),
   t('drill-press', 'Drilling machine', 'drilling', 0.8, 0.6, 1.8),
   t('multi-boring', 'Multi-boring machine', 'drilling', 2.5, 1.2, 1.5),
   t('belt-sander', 'Belt sanding machine', 'sanding', 3.0, 1.2, 1.4),
   t('wide-belt-sander', 'Wide belt sanding machine', 'sanding', 2.2, 2.0, 2.1),
-  masterSander(),
+  t('master-sander', 'Master sanding machine', 'sanding', 1.5, 1.6, 2.0, { operatorAt: 'infeed' }),
   t('brush-sander', 'Brush sanding machine', 'sanding', 2.0, 0.7, 1.25),
   t('roller-sander', 'Roller sanding machine', 'sanding', 1.0, 0.75, 1.25),
   t('disc-sander', 'Disc sanding machine', 'sanding', 1.0, 0.6, 1.2),
