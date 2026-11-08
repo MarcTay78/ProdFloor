@@ -54,14 +54,17 @@ export const facing = (dx: number, dy: number) => normDeg((Math.atan2(dx, -dy) *
 /** Walking speed of a worker, m/s (before the animation speed multiplier). */
 export const WALK_SPEED = 1.2;
 
+/** Forklift driving speed, m/s (before the animation speed multiplier). */
+export const FORKLIFT_SPEED = 2;
+
 /** Loop from the worker's position through each path point and back to the start; [] when the path is empty. */
-export function walkLoop(w: Pick<Worker, 'x' | 'y' | 'path'>): RouteLeg[] {
+export function walkLoop(w: Pick<Worker, 'x' | 'y' | 'path'>, speed = WALK_SPEED): RouteLeg[] {
   if (!w.path.length) return [];
   const home = { x: w.x, y: w.y };
   const pts = [home, ...w.path, home];
   return pts.slice(1).map((to, i) => {
     const from = pts[i];
-    return { kind: 'move', from, to, duration: Math.hypot(to.x - from.x, to.y - from.y) / WALK_SPEED };
+    return { kind: 'move', from, to, duration: Math.hypot(to.x - from.x, to.y - from.y) / speed };
   });
 }
 

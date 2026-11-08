@@ -84,10 +84,11 @@ describe('serialize / parse', () => {
     p.layouts[0].workers = [
       { id: 'w1', name: 'A', x: 1, y: 1, machineIds: [], rotation: 0, path: [{ x: 2, y: 2 }] },
       { id: 'w2', name: 'B', x: 1, y: 1, machineIds: [], rotation: 0, path: [] },
+      { id: 'w3', name: 'F', x: 1, y: 1, machineIds: [], rotation: 0, path: [], role: 'forklift' },
     ];
     const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.file.project.layouts[0].workers.map((w) => w.role)).toEqual(['handler', 'operator']);
+    if (r.ok) expect(r.file.project.layouts[0].workers.map((w) => w.role)).toEqual(['handler', 'operator', 'forklift']);
   });
 
   test('worker path must be a list of points', () => {

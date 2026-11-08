@@ -232,6 +232,13 @@ describe('workers', () => {
     s().updateWorker(w, { rotation: 90, path: [{ x: 4, y: 1 }, { x: 4, y: 5 }] });
     expect(layout().workers[0]).toMatchObject({ rotation: 90, path: [{ x: 4, y: 1 }, { x: 4, y: 5 }] });
   });
+  test('addWorker can add a forklift, numbered separately from workers', () => {
+    s().addWorker({ x: 1, y: 1 });
+    const f = s().addWorker({ x: 5, y: 5 }, 'forklift');
+    s().addWorker({ x: 2, y: 2 });
+    expect(layout().workers.find((w) => w.id === f)).toMatchObject({ name: 'Forklift 1', role: 'forklift' });
+    expect(layout().workers.map((w) => w.name)).toEqual(['Worker 1', 'Forklift 1', 'Worker 2']);
+  });
   test('removeWorker', () => {
     const w = s().addWorker({ x: 1, y: 1 });
     s().removeWorker(w);
