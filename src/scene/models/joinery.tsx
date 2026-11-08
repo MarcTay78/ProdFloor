@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { B, C, Panel, mat, usePaint, type ModelProps } from './parts';
 
 export function Mortiser({ l, w, h, color }: ModelProps) {
@@ -85,5 +86,52 @@ export function Tenoner({ l, w, h, color }: ModelProps) {
       ))}
       <Panel p={[l * 0.45, bedY + 0.3, -w * 0.1]} s={[0.1, 0.3, 0.25]} />
     </>
+  );
+}
+
+const tenonBlue = new THREE.MeshStandardMaterial({ color: '#2f6fbf', metalness: 0.25, roughness: 0.45 });
+
+/**
+ * CNC tenon machine: white cabinet with a red recessed work window holding two vertical cutter heads,
+ * blue work table with hand wheels below, touchscreen, blue doors, tall blue electrical cabinet on the side.
+ */
+export function CncTenoner({ l, w, h, color }: ModelProps) {
+  const body = usePaint(color, mat.white);
+  const fz = -w * 0.3; // cabinet front face
+  const top = h * 0.95, base = 0.12;
+  const tableY = h * 0.56;
+  // Mirrored in x so that, seen from the front, the electrical cabinet is on the right as in the reference photo.
+  return (
+    <group scale={[-1, 1, 1]}>
+      {[-0.42, 0.22].map((f) => <B key={f} p={[l * f, base / 2, -w * 0.02]} s={[l * 0.1, base, w * 0.75]} m={mat.grey} />)}
+      <B p={[-l * 0.095, (base + top) / 2, w * 0.05]} s={[l * 0.77, top - base, w * 0.7]} m={body} />
+      <B p={[-l * 0.18, h * 0.69, fz - 0.005]} s={[l * 0.34, h * 0.24, 0.01]} m={mat.red} />
+      <B p={[-l * 0.18, h * 0.69, fz - 0.002]} s={[l * 0.2, h * 0.2, 0.01]} m={mat.dark} />
+      {[-0.23, -0.13].map((f) => (
+        <group key={f}>
+          <C p={[l * f, h * 0.83, fz - 0.12]} rad={0.06} len={0.16} m={mat.steel} />
+          <C p={[l * f, h * 0.72, fz - 0.12]} rad={0.035} len={0.12} m={mat.dark} />
+          <C p={[l * f, h * 0.64, fz - 0.12]} rad={0.07} len={0.02} m={mat.blade} />
+        </group>
+      ))}
+      <B p={[-l * 0.18, tableY, fz - 0.2]} s={[l * 0.38, 0.04, 0.4]} m={tenonBlue} />
+      <B p={[-l * 0.18, tableY + 0.04, fz - 0.05]} s={[l * 0.38, 0.05, 0.03]} m={mat.steel} />
+      {[-0.23, -0.13].map((f) => (
+        <group key={f}>
+          <B p={[l * f, (base + tableY) / 2 + 0.05, fz - 0.06]} s={[0.1, tableY - base - 0.1, 0.12]} m={body} />
+          <C p={[l * f, h * 0.45, fz - 0.16]} rad={0.08} len={0.015} m={mat.steel} axis="z" />
+        </group>
+      ))}
+      {[-0.36, 0.13].map((f) => (
+        <B key={f} p={[l * f, h * 0.3, fz - 0.005]} s={[l * 0.13, h * 0.3, 0.01]} m={tenonBlue} />
+      ))}
+      <B p={[l * 0.12, h * 0.77, fz - 0.02]} s={[l * 0.16, h * 0.16, 0.04]} m={mat.grey} />
+      <B p={[l * 0.11, h * 0.77, fz - 0.045]} s={[l * 0.1, h * 0.12, 0.01]} m={mat.screen} />
+      <C p={[l * 0.18, h * 0.74, fz - 0.05]} rad={0.015} len={0.02} m={mat.red} axis="z" />
+      <B p={[l * 0.4, (0.1 + top) / 2, w * 0.15]} s={[l * 0.19, top - 0.1, w * 0.6]} m={tenonBlue} />
+      <B p={[l * 0.4, h * 0.25, -w * 0.27]} s={[l * 0.18, h * 0.28, w * 0.24]} m={mat.white} />
+      <C p={[-l * 0.485, h * 0.45, w * 0.05]} rad={0.07} len={0.06} m={tenonBlue} axis="x" />
+      <C p={[l * 0.3, h * 0.45, -w * 0.05]} rad={0.07} len={0.06} m={tenonBlue} axis="x" />
+    </group>
   );
 }

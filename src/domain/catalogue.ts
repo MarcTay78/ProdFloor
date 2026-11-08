@@ -50,6 +50,7 @@ export const CATALOGUE: MachineType[] = [
   t('mortiser', 'Mortising machine', 'joinery', 1.2, 0.9, 1.7),
   t('cnc-mortiser', 'CNC mortising machine', 'joinery', 2.0, 1.3, 2.0),
   t('tenoner', 'Tenon machine', 'joinery', 2.5, 1.6, 1.5),
+  t('cnc-tenoner', 'CNC tenon machine', 'joinery', 2.2, 1.1, 1.7),
   t('spindle-moulder', 'Spindle moulder', 'shaping', 1.4, 1.1, 1.2),
   t('router', 'Router', 'shaping', 1.3, 1.1, 1.8),
   t('cnc-router', 'CNC woodworking machine', 'shaping', 4.0, 2.2, 2.0),
