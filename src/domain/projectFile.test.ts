@@ -74,9 +74,17 @@ describe('serialize / parse', () => {
     const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.file.project.layouts[0].workers).toEqual([{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid] }]);
+      expect(r.file.project.layouts[0].workers).toEqual([{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid], rotation: 0, path: [] }]);
       expect(r.notices.some((n) => n.includes('from workers'))).toBe(true);
     }
+  });
+
+  test('worker path must be a list of points', () => {
+    const p: any = sample();
+    p.layouts[0].workers = [{ id: 'w1', name: 'Ann', x: 1, y: 3, machineIds: [], rotation: 90, path: [{ x: 2, y: 'b' }] }];
+    const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors).toContain('layouts[0].workers[0].path must be a list of {x, y} points');
   });
 
   test('worker without numeric position is rejected', () => {

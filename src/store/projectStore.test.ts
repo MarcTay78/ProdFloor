@@ -211,7 +211,7 @@ describe('workers', () => {
     const a = s().addWorker({ x: 2, y: 3 });
     s().addWorker({ x: 4, y: 3 });
     expect(layout().workers.map((w) => w.name)).toEqual(['Worker 1', 'Worker 2']);
-    expect(layout().workers[0]).toEqual({ id: a, name: 'Worker 1', x: 2, y: 3, machineIds: [] });
+    expect(layout().workers[0]).toEqual({ id: a, name: 'Worker 1', x: 2, y: 3, machineIds: [], rotation: 0, path: [] });
   });
   test('updateWorker keeps only known machines, once each', () => {
     const m = s().addMachine('bandsaw', 3, 4)!;
@@ -226,6 +226,11 @@ describe('workers', () => {
     s().updateWorker(w, { machineIds: [a, b] });
     s().deleteMachines([a]);
     expect(layout().workers[0].machineIds).toEqual([b]);
+  });
+  test('updateWorker saves rotation and path', () => {
+    const w = s().addWorker({ x: 1, y: 1 });
+    s().updateWorker(w, { rotation: 90, path: [{ x: 4, y: 1 }, { x: 4, y: 5 }] });
+    expect(layout().workers[0]).toMatchObject({ rotation: 90, path: [{ x: 4, y: 1 }, { x: 4, y: 5 }] });
   });
   test('removeWorker', () => {
     const w = s().addWorker({ x: 1, y: 1 });

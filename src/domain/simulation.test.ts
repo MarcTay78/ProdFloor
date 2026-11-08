@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { CATALOGUE, createMachine } from './catalogue';
 import { createFactory } from './projectFile';
-import { partRoute, positionAt, routeDuration } from './simulation';
+import { partRoute, pathLength, positionAt, routeDuration, walkLoop, walkPose } from './simulation';
 import type { Layout, Machine, WorkflowStep } from './types';
 import { deriveFlows } from './workflow';
 
@@ -55,5 +55,36 @@ describe('positionAt', () => {
   test('null before start and after the end', () => {
     expect(positionAt(r, -0.1)).toBeNull();
     expect(positionAt(r, 7.01)).toBeNull();
+  });
+});
+
+describe('worker walking loop', () => {
+  // Start (0,0) -> (3,0) -> (3,4) -> back to (0,0): 3 + 4 + 5 = 12 m at 1.2 m/s.
+  const w = { x: 0, y: 0, path: [{ x: 3, y: 0 }, { x: 3, y: 4 }] };
+
+  test('no path, no loop', () => {
+    expect(walkLoop({ x: 0, y: 0, path: [] })).toEqual([]);
+    expect(pathLength({ x: 0, y: 0, path: [] })).toBe(0);
+    expect(walkPose([], 3)).toBeNull();
+  });
+
+  test('loop returns to the start and has the right length', () => {
+    const legs = walkLoop(w);
+    expect(legs).toHaveLength(3);
+    expect(legs[2].to).toEqual({ x: 0, y: 0 });
+    expect(pathLength(w)).toBeCloseTo(12, 6);
+  });
+
+  test('pose moves along legs, faces travel direction and wraps', () => {
+    const legs = walkLoop(w);
+    const east = walkPose(legs, 1.5 / 1.2)!;
+    expect(east.x).toBeCloseTo(1.5, 6);
+    expect(east.y).toBeCloseTo(0, 6);
+    expect(east.rotation).toBeCloseTo(90, 6);
+    const north = walkPose(legs, 4 / 1.2)!; // 1 m into the second leg
+    expect(north.y).toBeCloseTo(1, 6);
+    expect(north.rotation).toBeCloseTo(180, 6);
+    const again = walkPose(legs, 10 + 1.5 / 1.2)!; // one full loop is 10 s
+    expect(again.x).toBeCloseTo(1.5, 6);
   });
 });

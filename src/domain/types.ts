@@ -35,7 +35,17 @@ export interface Machine {
 export interface ProcessArea { id: string; name: string; color: string }
 
 /** Person on the floor; placed freely, runs 0..n machines (staffing plan only, no capacity model). */
-export interface Worker { id: string; name: string; x: number; y: number; machineIds: string[] }
+export interface Worker {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  machineIds: string[];
+  /** Degrees counter-clockwise from above; 0 = facing south (same convention as machines). */
+  rotation: number;
+  /** Walking loop: from (x, y) through these floor points in order and back. */
+  path: Point2[];
+}
 
 export interface MachineType {
   id: string;
