@@ -17,6 +17,7 @@ export function TopToolbar() {
   const future = useStore(useProjectStore.temporal, (s) => s.futureStates.length);
   const ui = useUiStore();
   const fullView = isFullView(ui);
+  const hasFlows = project.layouts.some((l) => l.id === project.activeLayoutId && l.flows.length > 0);
   const savedAt = ui.savedAt ? new Date(ui.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
@@ -68,6 +69,19 @@ export function TopToolbar() {
       <button className={ui.showLabels ? btnOn : btn} onClick={() => ui.toggle('showLabels')}>Labels</button>
       <button className={ui.showGrid ? btnOn : btn} onClick={() => ui.toggle('showGrid')}>Grid</button>
       <button className={ui.showFlows ? btnOn : btn} onClick={() => ui.toggle('showFlows')}>Flows</button>
+      <button
+        className={ui.animating ? btnOn : btn}
+        onClick={() => ui.toggle('animating')}
+        disabled={!hasFlows}
+        title={hasFlows ? 'Animate parts moving through the workflow' : 'Set up a workflow first (Workflow tab)'}
+      >
+        {ui.animating ? '⏸ Stop parts' : '▶ Play parts'}
+      </button>
+      {ui.animating && (
+        <select className={input} value={ui.animSpeed} onChange={(e) => ui.setAnimSpeed(Number(e.target.value))} title="Animation speed">
+          {[1, 5, 20].map((v) => <option key={v} value={v}>{v}×</option>)}
+        </select>
+      )}
       {ui.viewMode === '2d' && (
         <button className={ui.showModelsIn2d ? btnOn : btn} onClick={() => ui.toggle('showModelsIn2d')}>Models</button>
       )}
