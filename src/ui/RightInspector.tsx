@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allTypes, findType } from '../domain/catalogue';
 import { normDeg } from '../domain/geometry';
-import { pathLength } from '../domain/simulation';
-import type { Machine, Side, Worker } from '../domain/types';
+import { facing, pathLength } from '../domain/simulation';
+import type { Machine, Side, Worker, WorkerRole } from '../domain/types';
 import { validateLayout } from '../domain/validation';
 import { loadModel } from '../store/persistence';
 import { activeLayout, useProjectStore } from '../store/projectStore';
@@ -188,7 +188,12 @@ function ModelSection({ m, typeName, typeModel, onSetMachine, onSetType }: {
   );
 }
 
-/** Selected worker: name, position, machines they run, delete. */
+const ROLES: { id: WorkerRole; label: string; hint: string }[] = [
+  { id: 'operator', label: 'Machine operator', hint: 'Stands at the machine and works when you press Play.' },
+  { id: 'handler', label: 'Material handler', hint: 'Moves material: walks its path when you press Play.' },
+];
+
+/** Selected worker: role, name, position, walking path (handlers), machines they run, delete. */
 function WorkerPanel({ w }: { w: Worker }) {
   const project = useProjectStore((s) => s.project);
   const { updateWorker, removeWorker } = useProjectStore();
@@ -198,6 +203,7 @@ function WorkerPanel({ w }: { w: Worker }) {
   const layout = activeLayout(project);
   const toggle = (id: string) =>
     updateWorker(w.id, { machineIds: w.machineIds.includes(id) ? w.machineIds.filter((x) => x !== id) : [...w.machineIds, id] });
+  const faceTo = layout.machines.find((m) => w.machineIds.includes(m.id));
   return (
     <Panel>
       <input
@@ -208,12 +214,32 @@ function WorkerPanel({ w }: { w: Worker }) {
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
         aria-label="Worker name"
       />
+      <div className="mt-2 grid grid-cols-2 gap-1" role="radiogroup" aria-label="Worker role">
+        {ROLES.map((r) => (
+          <button
+            key={r.id}
+            role="radio"
+            aria-checked={w.role === r.id}
+            className={w.role === r.id ? `${btn} border-sky-500 text-sky-300` : btn}
+            title={r.hint}
+            onClick={() => { setPathEdit(null); updateWorker(w.id, { role: r.id }); }}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 text-[11px] text-slate-500">{ROLES.find((r) => r.id === w.role)?.hint}</p>
       <div className="mt-2 space-y-1.5">
         <NumberField label="X (from west wall)" value={w.x} onCommit={(v) => updateWorker(w.id, { x: v })} />
         <NumberField label="Y (from south wall)" value={w.y} onCommit={(v) => updateWorker(w.id, { y: v })} />
         <NumberField label="Rotation" unit="°" digits={1} value={w.rotation} onCommit={(v) => updateWorker(w.id, { rotation: normDeg(v) })} />
+        {w.role === 'operator' && faceTo && (
+          <button className={`${btn} w-full`} onClick={() => updateWorker(w.id, { rotation: facing(faceTo.x - w.x, faceTo.y - w.y) })}>
+            Face {faceTo.name}
+          </button>
+        )}
       </div>
-      <div className="mt-3 border-t border-slate-800 pt-2">
+      {w.role === 'handler' && <div className="mt-3 border-t border-slate-800 pt-2">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Walking path</div>
         <p className="text-xs text-slate-400">
           {w.path.length
@@ -227,7 +253,7 @@ function WorkerPanel({ w }: { w: Worker }) {
           <button className={btn} disabled={!w.path.length} onClick={() => updateWorker(w.id, { path: w.path.slice(0, -1) })}>Undo point</button>
           <button className={btn} disabled={!w.path.length} onClick={() => updateWorker(w.id, { path: [] })}>Clear</button>
         </div>
-      </div>
+      </div>}
       <div className="mt-3 border-t border-slate-800 pt-2">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Runs machines ({w.machineIds.length})</div>
         {!layout.machines.length && <p className="text-xs text-slate-500">No machines placed yet.</p>}

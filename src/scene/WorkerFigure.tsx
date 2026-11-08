@@ -28,7 +28,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
   const speed = useUiStore((s) => s.animSpeed);
   const body = useRef<THREE.Group>(null);
   const clock = useRef(0);
-  const limbs = useRef<Limbs>({ legs: [], arm: null });
+  const limbs = useRef<Limbs>({ legs: [], arm: null, tool: null, model: null });
   const legs = useMemo(() => walkLoop(w), [w.x, w.y, w.path]); // eslint-disable-line react-hooks/exhaustive-deps
   const color = selected ? '#38bdf8' : '#f59e0b';
   const assigned = machines.filter((m) => w.machineIds.includes(m.id));
@@ -38,15 +38,31 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
   useFrame((_, dt) => {
     const g = body.current;
     if (!g) return;
-    const pose = animating && legs.length ? walkPose(legs, (clock.current += Math.min(dt, 0.1) * speed)) : null;
-    if (!pose) clock.current = 0;
+    const walking = animating && w.role === 'handler' && legs.length > 0;
+    const working = animating && w.role === 'operator';
+    clock.current = walking || working ? clock.current + Math.min(dt, 0.1) * speed : 0;
+    const pose = walking ? walkPose(legs, clock.current) : null;
     const p = pose ?? w;
-    // Walk cycle: one leg swing per STEP metres walked; free arm swings opposite; small bob on each step.
-    const phase = pose ? (clock.current * WALK_SPEED * Math.PI) / STEP : 0;
-    const swing = Math.sin(phase) * 0.55;
-    limbs.current.legs.forEach((leg, i) => { leg.rotation.x = i ? -swing : swing; });
-    if (limbs.current.arm) limbs.current.arm.rotation.x = swing * 0.8;
-    g.position.set(...toThree(p.x, p.y, pose && !flat ? Math.abs(Math.sin(phase)) * 0.025 : 0));
+    let legSwing = 0, armX = 0, toolZ = 0, lean = 0, bob = 0;
+    if (pose) {
+      // Walk cycle: one leg swing per STEP metres walked; free arm swings opposite; small bob on each step.
+      const phase = (clock.current * WALK_SPEED * Math.PI) / STEP;
+      legSwing = Math.sin(phase) * 0.55;
+      armX = legSwing * 0.8;
+      bob = Math.abs(Math.sin(phase)) * 0.025;
+    } else if (working) {
+      // Work loop: free arm reaches forward to feed the machine, tool arm works at double tempo, body leans in.
+      const phase = clock.current * 1.2;
+      armX = -0.9 + Math.sin(phase) * 0.35;
+      toolZ = Math.sin(phase * 2) * 0.35;
+      lean = 0.06 + Math.sin(phase) * 0.04;
+    }
+    const L = limbs.current;
+    L.legs.forEach((leg, i) => { leg.rotation.x = i ? -legSwing : legSwing; });
+    if (L.arm) L.arm.rotation.x = armX;
+    if (L.tool) L.tool.rotation.z = TOOL_ARM_Z + toolZ;
+    if (L.model) L.model.rotation.x = lean;
+    g.position.set(...toThree(p.x, p.y, flat ? 0 : bob));
     g.rotation.y = rotY(p.rotation);
   });
 
@@ -68,7 +84,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
             </mesh>
           </>
         ) : (
-          <group scale={1.1}><CuteWorker limbs={limbs} /></group>
+          <group scale={1.1} ref={(g) => { limbs.current.model = g; }}><CuteWorker limbs={limbs} /></group>
         )}
         {selected && (
           <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={(e) => startDrag(w, 'rotate', e, commit)}>
@@ -94,7 +110,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
           raycast={() => null}
         />
       ))}
-      {selected && w.path.length > 0 && (
+      {selected && w.role === 'handler' && w.path.length > 0 && (
         <>
           <Line points={loop.map((p) => toThree(p.x, p.y, 0.04))} color="#e879f9" lineWidth={3} dashed dashSize={0.4} gapSize={0.2} raycast={() => null} />
           {w.path.map((p, i) => (
@@ -120,7 +136,9 @@ function Mat({ color, rough = 0.55 }: { color: string; rough?: number }) {
 const HIP = 0.36;
 /** Floor distance covered per step (m, at the 1.1 model scale): sets leg swing speed so feet don't slide. */
 const STEP = 0.42;
-interface Limbs { legs: THREE.Group[]; arm: THREE.Group | null }
+interface Limbs { legs: THREE.Group[]; arm: THREE.Group | null; tool: THREE.Group | null; model: THREE.Group | null }
+/** Resting angle of the raised tool arm. */
+const TOOL_ARM_Z = -2.3;
 
 /** Chibi worker (blue hard hat, coverall, tool belt, pliers), ~1.52 m tall at scale 1, facing south (+z). */
 function CuteWorker({ limbs }: { limbs: React.MutableRefObject<Limbs> }) {
@@ -175,7 +193,7 @@ function CuteWorker({ limbs }: { limbs: React.MutableRefObject<Limbs> }) {
         </mesh>
       ))}
       {/* Raised arm holding pliers (viewer's left) */}
-      <group position={[-0.17, 0.74, 0]} rotation={[0, 0, -2.3]}>
+      <group position={[-0.17, 0.74, 0]} rotation={[0, 0, TOOL_ARM_Z]} ref={(g) => { limbs.current.tool = g; }}>
         <mesh position={[0, -0.12, 0]} castShadow>
           <capsuleGeometry args={[0.05, 0.16, 6, 12]} />
           <Mat color={SUIT} />
