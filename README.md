@@ -15,6 +15,11 @@ Design and plan: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 - **Checks**: operator area blocked (error), operator areas overlapping, clearance or operator area crossing a wall, operator area in a door access zone, workflow step without a machine. Listed in the status bar and per machine in the inspector; blocked operator areas show red in the scene.
 - Projects from earlier versions open unchanged; flow links become one workflow step per machine.
 
+## Layout comparison and suggestions (Phase 3a)
+
+- **Compare** (toolbar, needs two or more layouts): tick layouts to put side by side. Rows: material movement (Manhattan and straight-line), longest move with its steps, machines, steps, empty steps, footprint / operator / clearance / free floor %, errors and warnings. The best value per row is green; **Switch** makes a layout active.
+- **Suggestions tab** (left panel): hints for the active layout. Machine swaps that cut material movement by 1 m or more without creating new errors (top 3, with the saving), unusually long moves between steps, crossing flows, production machines not in the workflow, and a crowded floor (under 15 % free). Click a hint to select its machine; nothing is moved for you.
+
 ## Run locally
 
 ```bash

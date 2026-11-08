@@ -28,6 +28,14 @@ export function TopToolbar() {
       <Sep />
       <button className={btn} onClick={() => ui.openDialog('factory')}>Factory</button>
       <button className={btn} onClick={() => ui.openDialog('projects')}>Projects</button>
+      <button
+        className={btn}
+        onClick={() => ui.openDialog('compare')}
+        disabled={project.layouts.length < 2}
+        title={project.layouts.length < 2 ? 'Add a second layout to compare' : 'Compare layouts side by side'}
+      >
+        Compare
+      </button>
       <Sep />
       <button className={btn} onClick={undo} disabled={!past} title="Undo (Ctrl+Z)">↶ Undo</button>
       <button className={btn} onClick={redo} disabled={!future} title="Redo (Ctrl+Y)">↷ Redo</button>

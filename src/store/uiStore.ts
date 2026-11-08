@@ -2,7 +2,8 @@ import { create } from 'zustand';
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'side';
 type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows';
-export type DialogName = 'factory' | 'projects' | 'customType';
+export type DialogName = 'factory' | 'projects' | 'customType' | 'compare';
+export type LeftTab = 'library' | 'workflow' | 'suggestions';
 
 interface UiState {
   selectedId: string | null;
@@ -20,8 +21,8 @@ interface UiState {
   showGrid: boolean;
   showModelsIn2d: boolean;
   showFlows: boolean;
-  leftTab: 'library' | 'workflow';
-  setLeftTab(t: 'library' | 'workflow'): void;
+  leftTab: LeftTab;
+  setLeftTab(t: LeftTab): void;
   toggle(key: ToggleKey): void;
   snap: number;
   setSnap(v: number): void;
