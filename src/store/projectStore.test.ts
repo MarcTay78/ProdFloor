@@ -156,3 +156,30 @@ describe('undo / redo', () => {
     expect(layout().machines).toHaveLength(1);
   });
 });
+
+describe('autoArrangeLayout', () => {
+  test('adds an active auto-arranged copy; original untouched; undo removes it', () => {
+    // a -> b -> c with b and c in each other's places: swapping them saves 14 m.
+    const a = s().addMachine('table-saw', 5, 10)!;
+    const b = s().addMachine('table-saw', 20, 10)!;
+    const c = s().addMachine('table-saw', 10, 10)!;
+    for (const id of [a, b, c]) s().updateStep(s().addStep(), { machineIds: [id] });
+    const original = s().project.activeLayoutId;
+    const r = s().autoArrangeLayout();
+    expect(r.swaps).toBe(1);
+    expect(r.saved).toBeCloseTo(14, 6);
+    expect(s().project.layouts).toHaveLength(2);
+    expect(layout().id).not.toBe(original);
+    expect(layout().name).toMatch(/\(auto-arranged\)$/);
+    expect(layout().machines.find((m) => m.id === b)).toMatchObject({ x: 10 });
+    expect(s().project.layouts[0].machines.find((m) => m.id === b)).toMatchObject({ x: 20 });
+    undo();
+    expect(s().project.layouts).toHaveLength(1);
+  });
+
+  test('nothing to improve: no new layout', () => {
+    s().addMachine('table-saw', 5, 10);
+    expect(s().autoArrangeLayout()).toEqual({ swaps: 0, saved: 0 });
+    expect(s().project.layouts).toHaveLength(1);
+  });
+});

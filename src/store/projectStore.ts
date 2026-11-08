@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
+import { autoArrange } from '../domain/recommend';
 import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
 import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Project, WorkflowStep } from '../domain/types';
 import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
@@ -24,6 +25,8 @@ interface ProjectState {
   /** New layout (current building) pre-filled with the white-part production line. */
   addWhitePartLayout(): void;
   duplicateLayout(id: string): void;
+  /** Copy of the active layout rearranged by best-swap hill-climbing; added and made active only when it improves. */
+  autoArrangeLayout(): { swaps: number; saved: number };
   renameLayout(id: string, name: string): void;
   deleteLayout(id: string): void;
   setActiveLayout(id: string): void;
@@ -107,6 +110,14 @@ export const useProjectStore = create<ProjectState>()(
           if (!src) return;
           const l: Layout = { ...structuredClone(src), id: newId(), name: `${src.name} (copy)` };
           setProj((p) => ({ ...p, layouts: [...p.layouts, l], activeLayoutId: l.id }));
+        },
+        autoArrangeLayout() {
+          const src = activeLayout(get().project);
+          const r = autoArrange(src);
+          if (!r.swaps) return { swaps: 0, saved: 0 };
+          const l: Layout = { ...structuredClone(r.layout), id: newId(), name: `${src.name} (auto-arranged)` };
+          setProj((p) => ({ ...p, layouts: [...p.layouts, l], activeLayoutId: l.id }));
+          return { swaps: r.swaps, saved: r.saved };
         },
         renameLayout: (id, name) => setProj((p) => ({ ...p, layouts: p.layouts.map((l) => (l.id === id ? { ...l, name } : l)) })),
         deleteLayout(id) {

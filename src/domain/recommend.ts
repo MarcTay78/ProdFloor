@@ -24,14 +24,20 @@ const CROWDED_PCT = 15;
 const errorKeys = (ws: LayoutWarning[]) =>
   new Set(ws.filter((w) => w.severity === 'error').map((w) => `${w.code}|${[...w.machineIds].sort().join(',')}|${w.targetId ?? ''}`));
 
+export interface Swap { a: Machine; b: Machine; saving: number; swapped: Layout }
+
 /**
- * ponytail: tries every pair of workflow machines (~435 layouts for 30 machines, each a totalMovement);
+ * Position swaps of two workflow machines that save >= 1 m and add no error, best first.
+ * ponytail: tries every pair (~435 layouts for 30 machines, each a totalMovement);
  * validation only runs on savers, best first. Pruned search if this gets measurably slow.
  */
-function swaps(layout: Layout, base: number): Suggestion[] {
+export function validSwaps(layout: Layout, limit: number): Swap[] {
+  const total = totalMovement(layout);
+  if (!total) return [];
+  const base = total.manhattan;
   const used = new Set(layout.workflow.flatMap((s) => s.machineIds));
   const ms = layout.machines.filter((m) => used.has(m.id));
-  const cands: { a: Machine; b: Machine; saving: number; swapped: Layout }[] = [];
+  const cands: Swap[] = [];
   for (let i = 0; i < ms.length; i++) {
     for (let j = i + 1; j < ms.length; j++) {
       const a = ms[i], b = ms[j];
@@ -46,18 +52,37 @@ function swaps(layout: Layout, base: number): Suggestion[] {
   }
   cands.sort((p, q) => q.saving - p.saving);
   const before = errorKeys(validateLayout(layout));
-  const out: Suggestion[] = [];
+  const out: Swap[] = [];
   for (const c of cands) {
-    if (out.length === LIMIT) break;
+    if (out.length === limit) break;
     if ([...errorKeys(validateLayout(c.swapped))].some((k) => !before.has(k))) continue;
-    out.push({
-      code: 'SWAP_SAVES',
-      text: `Swap ${c.a.name} and ${c.b.name}: saves ${c.saving.toFixed(1)} m`,
-      machineIds: [c.a.id, c.b.id],
-      savingM: c.saving,
-    });
+    out.push(c);
   }
   return out;
+}
+
+const swapSuggestions = (layout: Layout): Suggestion[] =>
+  validSwaps(layout, LIMIT).map((c) => ({
+    code: 'SWAP_SAVES',
+    text: `Swap ${c.a.name} and ${c.b.name}: saves ${c.saving.toFixed(1)} m`,
+    machineIds: [c.a.id, c.b.id],
+    savingM: c.saving,
+  }));
+
+/**
+ * Hill-climb: apply the best valid swap until none saves >= 1 m (each step saves >= 1 m, so it terminates).
+ * ponytail: local search, stops in a local optimum and never uses empty floor; add relocation moves or restarts if results disappoint.
+ */
+export function autoArrange(layout: Layout, maxSwaps = 100): { layout: Layout; swaps: number; saved: number } {
+  let cur = layout, swaps = 0;
+  while (swaps < maxSwaps) {
+    const [best] = validSwaps(cur, 1);
+    if (!best) break;
+    cur = best.swapped;
+    swaps++;
+  }
+  if (!swaps) return { layout, swaps: 0, saved: 0 };
+  return { layout: cur, swaps, saved: totalMovement(layout)!.manhattan - totalMovement(cur)!.manhattan };
 }
 
 function longMoves(layout: Layout): Suggestion[] {
@@ -129,9 +154,8 @@ function crowded(layout: Layout, project: Pick<Project, 'customTypes'>): Suggest
 
 /** Text-only improvement hints for one layout; swaps (by saving) first, then rule order. */
 export function recommend(layout: Layout, project: Pick<Project, 'customTypes'>): Suggestion[] {
-  const total = totalMovement(layout);
   return [
-    ...(total ? swaps(layout, total.manhattan) : []),
+    ...swapSuggestions(layout),
     ...longMoves(layout),
     ...crossings(layout),
     ...notInWorkflow(layout, project),

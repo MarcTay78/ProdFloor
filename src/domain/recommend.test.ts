@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { CATALOGUE, createMachine } from './catalogue';
 import { createFactory } from './projectFile';
-import { recommend } from './recommend';
+import { autoArrange, recommend } from './recommend';
+import { totalMovement } from './analysis';
+import { validateLayout } from './validation';
 import type { Factory, Layout, Machine, WorkflowStep } from './types';
 import { deriveFlows } from './workflow';
 
@@ -101,5 +103,34 @@ describe('ordering', () => {
   });
   test('empty layout has no suggestions', () => {
     expect(recommend(layoutOf([], []), P)).toEqual([]);
+  });
+});
+
+describe('autoArrange', () => {
+  test('applies the best swap and stops when nothing else helps', () => {
+    // Same fixture as SWAP_SAVES: swapping b and c saves 14 m, after which no swap saves >= 1 m.
+    const a = saw(5, 10), b = saw(20, 10), c = saw(10, 10);
+    const l = layoutOf([a, b, c], [[a], [b], [c]]);
+    const r = autoArrange(l);
+    expect(r.swaps).toBe(1);
+    expect(r.saved).toBeCloseTo(14, 6);
+    expect(r.layout.machines.find((m) => m.id === b.id)).toMatchObject({ x: 10, y: 10 });
+    expect(l.machines.find((m) => m.id === b.id)).toMatchObject({ x: 20, y: 10 });
+  });
+
+  test('scrambled chain improves and gains no errors', () => {
+    // Six saws in a row, workflow order scrambled against the positions.
+    const ms = [5, 10, 15, 20, 25, 30].map((x) => saw(x, 10));
+    const order = [3, 0, 5, 1, 4, 2].map((i) => ms[i]);
+    const l = layoutOf(ms, order.map((m) => [m]));
+    const r = autoArrange(l);
+    expect(r.swaps).toBeGreaterThan(0);
+    expect(totalMovement(r.layout)!.manhattan).toBeCloseTo(totalMovement(l)!.manhattan - r.saved, 6);
+    expect(validateLayout(r.layout).filter((w) => w.severity === 'error')).toEqual([]);
+  });
+
+  test('no workflow: unchanged, zero swaps', () => {
+    const l = layoutOf([saw(5, 10)], []);
+    expect(autoArrange(l)).toEqual({ layout: l, swaps: 0, saved: 0 });
   });
 });
