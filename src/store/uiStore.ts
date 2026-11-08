@@ -29,6 +29,9 @@ interface UiState {
   animating: boolean;
   animSpeed: number;
   setAnimSpeed(v: number): void;
+  /** single: next part starts when the previous one has finished; stream: a new part every few seconds. */
+  animMode: 'single' | 'stream';
+  setAnimMode(m: 'single' | 'stream'): void;
   leftTab: LeftTab;
   setLeftTab(t: LeftTab): void;
   toggle(key: ToggleKey): void;
@@ -71,6 +74,8 @@ export const useUiStore = create<UiState>()((set) => ({
   animating: false,
   animSpeed: 5,
   setAnimSpeed: (animSpeed) => set({ animSpeed }),
+  animMode: 'single',
+  setAnimMode: (animMode) => set({ animMode }),
   leftTab: 'library',
   setLeftTab: (leftTab) => set({ leftTab }),
   toggle: (key) => set((s) => ({ [key]: !s[key] }) as Partial<UiState>),

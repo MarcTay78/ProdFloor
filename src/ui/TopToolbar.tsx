@@ -78,9 +78,15 @@ export function TopToolbar() {
         {ui.animating ? '⏸ Stop parts' : '▶ Play parts'}
       </button>
       {ui.animating && (
-        <select className={input} value={ui.animSpeed} onChange={(e) => ui.setAnimSpeed(Number(e.target.value))} title="Animation speed">
-          {[1, 5, 20].map((v) => <option key={v} value={v}>{v}×</option>)}
-        </select>
+        <>
+          <select className={input} value={ui.animMode} onChange={(e) => ui.setAnimMode(e.target.value as 'single' | 'stream')} title="Single part: one part goes through every step before the next starts. Stream: a new part every 3 s.">
+            <option value="single">Single part</option>
+            <option value="stream">Stream</option>
+          </select>
+          <select className={input} value={ui.animSpeed} onChange={(e) => ui.setAnimSpeed(Number(e.target.value))} title="Animation speed">
+            {[1, 5, 20].map((v) => <option key={v} value={v}>{v}×</option>)}
+          </select>
+        </>
       )}
       {ui.viewMode === '2d' && (
         <button className={ui.showModelsIn2d ? btnOn : btn} onClick={() => ui.toggle('showModelsIn2d')}>Models</button>
