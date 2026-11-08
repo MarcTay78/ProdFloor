@@ -32,6 +32,12 @@ describe('layoutMetrics', () => {
     expect(area.footprint + area.operator + area.clearance + area.free).toBeCloseTo(100, 1);
   });
 
+  test('workers counts the layout workers', () => {
+    const l = { ...layoutOf([a], [[a]]), workers: [{ id: 'w1', name: 'W', x: 1, y: 1, machineIds: [a.id] }] };
+    expect(layoutMetrics(l, P).workers).toBe(1);
+    expect(METRIC_ROWS.find((r) => r.key === 'workers')).toMatchObject({ label: 'Workers', better: null });
+  });
+
   test('null movement and longest with fewer than two non-empty steps', () => {
     const m = layoutMetrics(layoutOf([a], [[a]]), P);
     expect(m.movement).toBeNull();

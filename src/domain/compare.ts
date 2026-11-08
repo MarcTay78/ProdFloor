@@ -4,6 +4,7 @@ import { validateLayout } from './validation';
 
 export interface LayoutMetrics {
   machines: number;
+  workers: number;
   movement: Distance | null;
   longest: { from: string; to: string; manhattan: number } | null;
   steps: number;
@@ -23,6 +24,7 @@ export function layoutMetrics(layout: Layout, project: Pick<Project, 'customType
   const ws = validateLayout(layout);
   return {
     machines: layout.machines.length,
+    workers: layout.workers.length,
     movement: totalMovement(layout),
     longest: top ? { from: stepName(top.fromStepId), to: stepName(top.toStepId), manhattan: top.manhattan } : null,
     steps: layout.workflow.length,
@@ -51,6 +53,7 @@ export const METRIC_ROWS: MetricRow[] = [
   { key: 'straight', label: 'Straight-line movement', value: (m) => m.movement?.straight ?? null, format: metres, better: 'lower' },
   { key: 'longest', label: 'Longest move', value: (m) => m.longest?.manhattan ?? null, format: metres, better: 'lower' },
   { key: 'machines', label: 'Machines', value: (m) => m.machines, format: count, better: null },
+  { key: 'workers', label: 'Workers', value: (m) => m.workers, format: count, better: null },
   { key: 'steps', label: 'Steps', value: (m) => m.steps, format: count, better: null },
   { key: 'emptySteps', label: 'Empty steps', value: (m) => m.emptySteps, format: count, better: 'lower' },
   { key: 'footprint', label: 'Machine footprint', value: (m) => m.area.footprint, format: percent, better: null },
