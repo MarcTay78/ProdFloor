@@ -4,7 +4,7 @@ import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
 import { autoArrange } from '../domain/recommend';
 import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
-import type { Factory, FactoryItemKind, Layout, Machine, MachineType, ProcessArea, Project, WorkflowStep } from '../domain/types';
+import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Point2, ProcessArea, Project, Worker, WorkflowStep } from '../domain/types';
 import { nextAreaColor } from '../domain/areas';
 import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
 
@@ -45,6 +45,11 @@ interface ProjectState {
   updateArea(id: string, patch: Partial<Pick<ProcessArea, 'name' | 'color'>>): void;
   /** Removes the area and unassigns its machines (one undo step). */
   removeArea(id: string): void;
+  /** New worker on the active layout's floor ("Worker N"); returns its id. */
+  addWorker(at: Point2): string;
+  /** machineIds are deduped and limited to machines of the active layout. */
+  updateWorker(id: string, patch: Partial<Omit<Worker, 'id'>>): void;
+  removeWorker(id: string): void;
 }
 
 const touch = (p: Project): Project => ({ ...p, updatedAt: new Date().toISOString() });
@@ -90,10 +95,30 @@ export const useProjectStore = create<ProjectState>()(
             areas: l.areas.filter((a) => a.id !== id),
             machines: l.machines.map((m) => (m.areaId === id ? { ...m, areaId: undefined } : m)),
           })),
+        addWorker(at) {
+          const id = newId();
+          setLayout((l) => ({ ...l, workers: [...l.workers, { id, name: `Worker ${l.workers.length + 1}`, x: at.x, y: at.y, machineIds: [] }] }));
+          return id;
+        },
+        updateWorker: (id, patch) =>
+          setLayout((l) => {
+            if (patch.machineIds) {
+              const known = new Set(l.machines.map((m) => m.id));
+              patch = { ...patch, machineIds: [...new Set(patch.machineIds)].filter((x) => known.has(x)) };
+            }
+            return { ...l, workers: l.workers.map((w) => (w.id === id ? { ...w, ...patch } : w)) };
+          }),
+        removeWorker: (id) => setLayout((l) => ({ ...l, workers: l.workers.filter((w) => w.id !== id) })),
         deleteMachines: (ids) =>
           setLayout((l) => {
             const workflow = removeMachineFromWorkflow(l.workflow, ids);
-            return { ...l, machines: l.machines.filter((m) => !ids.includes(m.id)), workflow, flows: deriveFlows(workflow) };
+            return {
+              ...l,
+              machines: l.machines.filter((m) => !ids.includes(m.id)),
+              workflow,
+              flows: deriveFlows(workflow),
+              workers: l.workers.map((w) => ({ ...w, machineIds: w.machineIds.filter((x) => !ids.includes(x)) })),
+            };
           }),
         duplicateMachine(id) {
           const src = activeLayout(get().project).machines.find((m) => m.id === id);

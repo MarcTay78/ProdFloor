@@ -9,7 +9,7 @@ import { deriveFlows } from './workflow';
 const saw = (x: number, y: number, rotation = 0): Machine => ({ ...createMachine(CATALOGUE.find((t) => t.id === 'table-saw')!, x, y), rotation });
 const layoutOf = (machines: Machine[], groups: Machine[][]): Layout => {
   const workflow: WorkflowStep[] = groups.map((g, i) => ({ id: `s${i}`, name: `S${i}`, machineIds: g.map((m) => m.id) }));
-  return { id: 'L', name: 'L', factory: createFactory(), machines, workflow, flows: deriveFlows(workflow), areas: [] };
+  return { id: 'L', name: 'L', factory: createFactory(), machines, workflow, flows: deriveFlows(workflow), areas: [], workers: [] };
 };
 
 describe('linkDistance', () => {
@@ -72,7 +72,7 @@ describe('areaBreakdown', () => {
   const near = (a: number, b: number) => expect(Math.abs(a - b)).toBeLessThan(0.1);
 
   test('each cell counted once, by priority', () => {
-    const r = areaBreakdown({ id: 'L', name: 'L', factory: f, machines: [m], workflow: [], flows: [], areas: [] }, { customTypes: [] });
+    const r = areaBreakdown({ id: 'L', name: 'L', factory: f, machines: [m], workflow: [], flows: [], areas: [], workers: [] }, { customTypes: [] });
     near(r.usable, 99);
     near(r.parts.footprint, 2);
     near(r.parts.operator, 1.8);
@@ -83,7 +83,7 @@ describe('areaBreakdown', () => {
   });
 
   test('empty floor is all free', () => {
-    const r = areaBreakdown({ id: 'L', name: 'L', factory: { ...f, pillars: [], doors: [] }, machines: [], workflow: [], flows: [], areas: [] }, { customTypes: [] });
+    const r = areaBreakdown({ id: 'L', name: 'L', factory: { ...f, pillars: [], doors: [] }, machines: [], workflow: [], flows: [], areas: [], workers: [] }, { customTypes: [] });
     near(r.usable, 100);
     near(r.parts.free, 100);
   });

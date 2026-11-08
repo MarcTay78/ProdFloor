@@ -60,6 +60,7 @@ export function BottomStatus() {
           <div className="text-slate-500">Material movement</div>
           <div className="whitespace-nowrap text-slate-100">{movement ? `${f2(movement.manhattan)} m` : '—'}</div>
         </button>
+        <Stat label="Workers" value={String(layout.workers.length)} />
       </div>
       <div className="flex min-w-0 flex-col">
         <div className="mb-1 text-xs text-slate-400">

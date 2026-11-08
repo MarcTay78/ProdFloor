@@ -34,6 +34,9 @@ export interface Machine {
 /** User-defined group of machines by process stage (e.g. "Cutting", "Sanding"); drawn on the floor around its machines. */
 export interface ProcessArea { id: string; name: string; color: string }
 
+/** Person on the floor; placed freely, runs 0..n machines (staffing plan only, no capacity model). */
+export interface Worker { id: string; name: string; x: number; y: number; machineIds: string[] }
+
 export interface MachineType {
   id: string;
   name: string;
@@ -94,6 +97,8 @@ export interface Layout {
   flows: FlowLink[];
   /** Process areas; machines join one by Machine.areaId. */
   areas: ProcessArea[];
+  /** Workers placed on this layout's floor. */
+  workers: Worker[];
 }
 
 export interface Project {

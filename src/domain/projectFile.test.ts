@@ -56,13 +56,35 @@ describe('serialize / parse', () => {
     delete p.typeModels;
     delete p.layouts[0].flows;
     delete p.layouts[0].factory.windows;
+    delete p.layouts[0].workers;
     const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.file.project.typeModels).toEqual({});
       expect(r.file.project.layouts[0].flows).toEqual([]);
       expect(r.file.project.layouts[0].factory.windows).toEqual([]);
+      expect(r.file.project.layouts[0].workers).toEqual([]);
     }
+  });
+
+  test('worker references to unknown machines are stripped with a notice; workers round-trip', () => {
+    const p: any = sample();
+    const mid = p.layouts[0].machines[0].id;
+    p.layouts[0].workers = [{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid, 'ghost'] }];
+    const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.file.project.layouts[0].workers).toEqual([{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid] }]);
+      expect(r.notices.some((n) => n.includes('from workers'))).toBe(true);
+    }
+  });
+
+  test('worker without numeric position is rejected', () => {
+    const p: any = sample();
+    p.layouts[0].workers = [{ id: 'w1', name: 'Ann', x: 'a', y: 3, machineIds: [] }];
+    const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors).toContain('layouts[0].workers[0] needs id, name, x and y');
   });
 
   test('old file without workflow: built from the flow chain, no notice', () => {

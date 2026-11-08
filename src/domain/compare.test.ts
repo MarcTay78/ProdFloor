@@ -8,7 +8,7 @@ import { deriveFlows } from './workflow';
 const saw = (x: number, y: number): Machine => createMachine(CATALOGUE.find((t) => t.id === 'table-saw')!, x, y);
 const layoutOf = (machines: Machine[], groups: Machine[][]): Layout => {
   const workflow: WorkflowStep[] = groups.map((g, i) => ({ id: `s${i}`, name: `S${i}`, machineIds: g.map((m) => m.id) }));
-  return { id: 'L', name: 'L', factory: { ...createFactory(), doors: [] }, machines, workflow, flows: deriveFlows(workflow), areas: [] };
+  return { id: 'L', name: 'L', factory: { ...createFactory(), doors: [] }, machines, workflow, flows: deriveFlows(workflow), areas: [], workers: [] };
 };
 const P = { customTypes: [] };
 
@@ -30,6 +30,12 @@ describe('layoutMetrics', () => {
     const { area } = layoutMetrics(layoutOf([a, b, c], [[a], [b], [c]]), P);
     expect(area.footprint).toBeGreaterThan(0);
     expect(area.footprint + area.operator + area.clearance + area.free).toBeCloseTo(100, 1);
+  });
+
+  test('workers counts the layout workers', () => {
+    const l = { ...layoutOf([a], [[a]]), workers: [{ id: 'w1', name: 'W', x: 1, y: 1, machineIds: [a.id] }] };
+    expect(layoutMetrics(l, P).workers).toBe(1);
+    expect(METRIC_ROWS.find((r) => r.key === 'workers')).toMatchObject({ label: 'Workers', better: null });
   });
 
   test('null movement and longest with fewer than two non-empty steps', () => {

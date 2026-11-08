@@ -5,11 +5,13 @@ import { useUiStore } from '../store/uiStore';
 import { btn, input } from './Dialog';
 
 export const MACHINE_TYPE_MIME = 'application/x-machine-type';
+export const WORKER_MIME = 'application/x-worker';
 
 export function LeftLibrary() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
   const addWhitePartLayout = useProjectStore((s) => s.addWhitePartLayout);
+  const addWorker = useProjectStore((s) => s.addWorker);
   const { select, openDialog, openCategories, toggleCategory } = useUiStore();
   const [query, setQuery] = useState('');
 
@@ -27,6 +29,7 @@ export function LeftLibrary() {
     const id = addMachine(typeId, layout.factory.length / 2, layout.factory.width / 2);
     if (id) select(id);
   };
+  const addWorkerAtCentre = () => select(addWorker({ x: layout.factory.length / 2, y: layout.factory.width / 2 }));
 
   return (
     <div className="flex h-full flex-col border-r border-slate-700 bg-slate-900 text-slate-200">
@@ -35,6 +38,21 @@ export function LeftLibrary() {
         <p className="text-[11px] leading-tight text-slate-500">Drag onto the floor, or double-click to add at the centre.</p>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
+        <div className="mb-2">
+          <div className="py-1 text-xs font-medium uppercase tracking-wide text-slate-400">People</div>
+          <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData(WORKER_MIME, 'worker'); e.dataTransfer.effectAllowed = 'copy'; }}
+            onDoubleClick={addWorkerAtCentre}
+            className="mb-1 cursor-grab rounded border border-slate-700 bg-slate-800/60 px-2 py-1.5 hover:border-amber-500 active:cursor-grabbing"
+            title="Drag onto the factory floor, then assign machines in the inspector"
+          >
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span>Worker</span>
+              <span className="rounded bg-slate-700 px-1.5 text-[11px] text-slate-300" title="Placed in this layout">{layout.workers.length}</span>
+            </div>
+          </div>
+        </div>
         {CATEGORIES.map((cat) => {
           const list = types.filter((t) => t.category === cat);
           if (!list.length) return null;
