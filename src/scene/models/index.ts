@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { DrillPress, MultiBoring } from './drilling';
+import { DrillPress, MultiBoring, MultiHeadDrill } from './drilling';
 import { CncMortiser, Mortiser, Tenoner } from './joinery';
 import type { ModelProps } from './parts';
 import { FourSidedMoulder, SurfacePlaner, ThicknessPlaner } from './planing';
@@ -37,6 +37,7 @@ export const MODELS: Record<string, FC<ModelProps>> = {
   shaper: Shaper,
   'drill-press': DrillPress,
   'multi-boring': MultiBoring,
+  'multi-head-drill': MultiHeadDrill,
   'belt-sander': BeltSander,
   'wide-belt-sander': WideBeltSander,
   'master-sander': MasterSander,
@@ -61,7 +62,7 @@ export const MODEL_LABELS: Record<string, string> = {
   bandsaw: 'Bandsaw', 'table-saw': 'Table / panel saw', 'crosscut-saw': 'Crosscut saw', 'double-end-saw': 'Double-end trim saw', 'rip-saw': 'Rip saw',
   'surface-planer': 'Surface planer', 'thickness-planer': 'Thickness planer', 'four-sided-moulder': 'Four-sided moulder',
   mortiser: 'Mortiser', 'cnc-mortiser': 'CNC mortiser', tenoner: 'Tenoner', 'spindle-moulder': 'Spindle moulder', router: 'Overhead router',
-  'cnc-router': 'CNC router', 'chair-apron-cnc': 'Chair apron moulder', shaper: 'Copy shaper', 'drill-press': 'Drill press', 'multi-boring': 'Multi-boring',
+  'cnc-router': 'CNC router', 'chair-apron-cnc': 'Chair apron moulder', shaper: 'Copy shaper', 'drill-press': 'Drill press', 'multi-boring': 'Multi-boring', 'multi-head-drill': 'Double-head drill',
   'belt-sander': 'Belt sander', 'wide-belt-sander': 'Wide belt sander', 'master-sander': 'Master sander', 'brush-sander': 'Brush sander', 'roller-sander': 'Roller sander', 'disc-sander': 'Disc sander', 'profile-sander': 'Profile sander',
   'inspection-table': 'Inspection table', 'assembly-station': 'Assembly bench', 'glue-station': 'Glue station',
   'spray-booth': 'Spray booth', 'drying-room': 'Drying room', 'packing-station': 'Packing bench',

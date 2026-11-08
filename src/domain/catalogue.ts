@@ -57,6 +57,7 @@ export const CATALOGUE: MachineType[] = [
   t('shaper', 'Wood shaping machine', 'shaping', 1.5, 1.2, 1.6),
   t('drill-press', 'Drilling machine', 'drilling', 0.8, 0.6, 1.8),
   t('multi-boring', 'Multi-boring machine', 'drilling', 2.5, 1.2, 1.5),
+  t('multi-head-drill', 'Multi-head drilling machine', 'drilling', 2.5, 1.0, 1.9),
   t('belt-sander', 'Belt sanding machine', 'sanding', 3.0, 1.2, 1.4),
   t('wide-belt-sander', 'Wide belt sanding machine', 'sanding', 2.2, 2.0, 2.1),
   t('master-sander', 'Master sanding machine', 'sanding', 1.5, 1.6, 2.0, { operatorAt: 'infeed' }),
