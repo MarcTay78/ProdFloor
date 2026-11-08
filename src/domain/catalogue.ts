@@ -59,6 +59,7 @@ export const CATALOGUE: MachineType[] = [
   t('belt-sander', 'Belt sanding machine', 'sanding', 3.0, 1.2, 1.4),
   t('wide-belt-sander', 'Wide belt sanding machine', 'sanding', 2.2, 2.0, 2.1),
   masterSander(),
+  t('brush-sander', 'Brush sanding machine', 'sanding', 2.0, 0.7, 1.25),
   t('disc-sander', 'Disc sanding machine', 'sanding', 1.0, 0.6, 1.2),
   t('profile-sander', 'Profile sanding machine', 'sanding', 2.5, 1.3, 1.6),
   t('inspection-table', 'Component inspection table', 'assembly', 2.0, 1.0, 0.9),

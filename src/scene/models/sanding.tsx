@@ -124,3 +124,46 @@ export function ProfileSander({ l, w, h, color }: ModelProps) {
     </>
   );
 }
+
+const abrasive = new THREE.MeshStandardMaterial({ color: '#7a2f22', metalness: 0, roughness: 0.95 });
+const sisal = new THREE.MeshStandardMaterial({ color: '#d8c08a', metalness: 0, roughness: 0.95 });
+const brushedSteel = new THREE.MeshStandardMaterial({ color: '#d3d7da', metalness: 0.15, roughness: 0.45 });
+
+/**
+ * Brush sander: white pedestal, stainless top housing with controls on the front (-z), one shaft along x
+ * with a flap-brush drum on each end (abrasive flaps alternating with sisal bristles) and guards behind.
+ */
+export function BrushSander({ l, w, h, color }: ModelProps) {
+  const body = usePaint(color, mat.white);
+  const axisY = h * 0.78;
+  const r = Math.min(h * 0.17, w * 0.42);
+  const bl = l * 0.28;
+  const housingTop = Math.min(h, axisY + r * 0.9);
+  const housingBot = axisY - r * 0.75;
+  const flaps = 16;
+  return (
+    <>
+      <B p={[0, 0.025, 0]} s={[l * 0.36, 0.05, w * 0.85]} m={body} />
+      <B p={[0, housingBot / 2, w * 0.05]} s={[l * 0.24, housingBot, w * 0.5]} m={body} />
+      <B p={[0, housingBot * 0.45, -w * 0.205]} s={[l * 0.2, housingBot * 0.8, 0.01]} m={mat.cream} />
+      <B p={[0, (housingBot + housingTop) / 2, 0]} s={[l * 0.34, housingTop - housingBot, w * 0.8]} m={brushedSteel} />
+      <Panel p={[0, axisY, -w * 0.4 - 0.03]} s={[l * 0.14, (housingTop - housingBot) * 0.45, 0.05]} />
+      <C p={[0, axisY, 0]} rad={0.025} len={l * 0.96} m={mat.steel} axis="x" />
+      {[-1, 1].map((s) => {
+        const cx = s * (l / 2 - bl / 2 - 0.02);
+        return (
+          <group key={s}>
+            <C p={[cx, axisY, 0]} rad={r * 0.18} len={bl} m={mat.dark} axis="x" />
+            {Array.from({ length: flaps }, (_, i) => (
+              <group key={i} position={[cx, axisY, 0]} rotation={[(i * 2 * Math.PI) / flaps, 0, 0]}>
+                <B p={[0, r * 0.58, 0]} s={[bl, r * 0.8, 0.018]} m={i % 2 ? sisal : abrasive} />
+              </group>
+            ))}
+            <B p={[cx, axisY + r * 0.2, r + 0.04]} s={[bl * 1.02, r * 1.6, 0.02]} m={mat.dark} />
+            <C p={[s * (l / 2 - 0.01), axisY, 0]} rad={r * 0.35} len={0.02} m={mat.red} axis="x" />
+          </group>
+        );
+      })}
+    </>
+  );
+}

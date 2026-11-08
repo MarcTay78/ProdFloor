@@ -2,9 +2,9 @@ import { describe, expect, test } from 'vitest';
 import { CATALOGUE, CATEGORIES, allTypes, createMachine, findType } from './catalogue';
 
 describe('catalogue', () => {
-  test('has 33 built-in types with unique ids', () => {
-    expect(CATALOGUE).toHaveLength(33);
-    expect(new Set(CATALOGUE.map((t) => t.id)).size).toBe(33);
+  test('has 34 built-in types with unique ids', () => {
+    expect(CATALOGUE).toHaveLength(34);
+    expect(new Set(CATALOGUE.map((t) => t.id)).size).toBe(34);
   });
 
   test('every type has positive dimensions and a known category', () => {
@@ -35,7 +35,7 @@ describe('catalogue', () => {
 
   test('custom types are found after built-ins', () => {
     const custom = { ...CATALOGUE[0], id: 'my-saw', name: 'My saw', category: 'custom' as const };
-    expect(allTypes({ customTypes: [custom] })).toHaveLength(34);
+    expect(allTypes({ customTypes: [custom] })).toHaveLength(35);
     expect(findType({ customTypes: [custom] }, 'my-saw')!.name).toBe('My saw');
   });
 });
