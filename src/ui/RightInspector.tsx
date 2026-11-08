@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allTypes, findType } from '../domain/catalogue';
 import { normDeg } from '../domain/geometry';
-import type { Machine, Side } from '../domain/types';
+import type { Machine, Side, Worker } from '../domain/types';
 import { validateLayout } from '../domain/validation';
 import { loadModel } from '../store/persistence';
 import { activeLayout, useProjectStore } from '../store/projectStore';
@@ -21,6 +21,8 @@ export function RightInspector() {
   const warnings = useMemo(() => validateLayout(layout).filter((w) => m && w.machineIds.includes(m.id)), [layout, m]);
 
   const steps = layout.workflow.flatMap((s, i) => (m && s.machineIds.includes(m.id) ? [{ id: s.id, name: s.name, no: i + 1 }] : []));
+  const w = m ? undefined : layout.workers.find((x) => x.id === selectedId);
+  if (w) return <WorkerPanel w={w} />;
 
   if (!m) {
     return (
@@ -37,6 +39,7 @@ export function RightInspector() {
   }
 
   const type = findType(project, m.typeId);
+  const crew = layout.workers.filter((x) => x.machineIds.includes(m.id)).map((x) => x.name);
   const set = (patch: Partial<Machine>) => updateMachine(m.id, patch);
   const resetToType = () => {
     if (!type) return;
@@ -77,6 +80,7 @@ export function RightInspector() {
         </select>
       </label>
       <button className={`${btn} mt-1 w-full`} onClick={resetToType}>Reset to type defaults</button>
+      <p className="mt-1 text-xs text-slate-400">Workers: <span className="text-slate-200">{crew.length ? crew.join(', ') : 'none'}</span></p>
 
       <Section title="Dimensions">
         <NumberField label="Length" value={m.length} min={0.05} onCommit={(v) => set({ length: v })} />
@@ -180,6 +184,43 @@ function ModelSection({ m, typeName, typeModel, onSetMachine, onSetType }: {
         {!m.modelOverride && typeModel && <button className={btn} onClick={() => onSetType(null)}>Clear type model</button>}
       </div>
     </div>
+  );
+}
+
+/** Selected worker: name, position, machines they run, delete. */
+function WorkerPanel({ w }: { w: Worker }) {
+  const project = useProjectStore((s) => s.project);
+  const { updateWorker, removeWorker } = useProjectStore();
+  const select = useUiStore((s) => s.select);
+  const layout = activeLayout(project);
+  const toggle = (id: string) =>
+    updateWorker(w.id, { machineIds: w.machineIds.includes(id) ? w.machineIds.filter((x) => x !== id) : [...w.machineIds, id] });
+  return (
+    <Panel>
+      <input
+        key={w.id + w.name}
+        className={`${input} w-full py-1 text-sm`}
+        defaultValue={w.name}
+        onBlur={(e) => e.target.value.trim() && e.target.value !== w.name && updateWorker(w.id, { name: e.target.value.trim() })}
+        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+        aria-label="Worker name"
+      />
+      <div className="mt-2 space-y-1.5">
+        <NumberField label="X (from west wall)" value={w.x} onCommit={(v) => updateWorker(w.id, { x: v })} />
+        <NumberField label="Y (from south wall)" value={w.y} onCommit={(v) => updateWorker(w.id, { y: v })} />
+      </div>
+      <div className="mt-3 border-t border-slate-800 pt-2">
+        <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Runs machines ({w.machineIds.length})</div>
+        {!layout.machines.length && <p className="text-xs text-slate-500">No machines placed yet.</p>}
+        {layout.machines.map((m) => (
+          <label key={m.id} className="flex items-center gap-1.5 text-xs text-slate-300">
+            <input type="checkbox" checked={w.machineIds.includes(m.id)} onChange={() => toggle(m.id)} />
+            {m.name}
+          </label>
+        ))}
+      </div>
+      <button className={`${btn} mt-4 w-full text-red-300`} onClick={() => { removeWorker(w.id); select(null); }}>Delete worker</button>
+    </Panel>
   );
 }
 

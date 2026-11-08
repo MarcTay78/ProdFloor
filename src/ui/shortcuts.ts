@@ -18,8 +18,12 @@ export function useShortcuts(): void {
       if (e.key === 'Escape') { ui.select(null); return; }
       if (!ctrl && !e.altKey && key === 'f') { toggleFullView(); return; }
       if (!id) return;
-      const m = activeLayout(store.project).machines.find((x) => x.id === id);
-      if (!m) return;
+      const layout = activeLayout(store.project);
+      const m = layout.machines.find((x) => x.id === id);
+      if (!m) {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && layout.workers.some((w) => w.id === id)) { store.removeWorker(id); ui.select(null); }
+        return;
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') { store.deleteMachines([id]); ui.select(null); }
       else if (ctrl && key === 'd') { e.preventDefault(); const copy = store.duplicateMachine(id); if (copy) ui.select(copy); }
       else if (!ctrl && key === 'r') store.updateMachine(id, { rotation: normDeg(m.rotation + (e.shiftKey ? -90 : 90)) });
