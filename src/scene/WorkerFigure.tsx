@@ -33,14 +33,13 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
           </mesh>
         ) : (
           <>
-            <mesh position={[0, 0.75, 0]} castShadow>
-              <capsuleGeometry args={[0.18, 1.0, 4, 12]} />
-              <meshStandardMaterial color={color} />
-            </mesh>
-            <mesh position={[0, 1.55, 0]} castShadow>
-              <sphereGeometry args={[0.13, 16, 16]} />
-              <meshStandardMaterial color="#fcd9b6" />
-            </mesh>
+            <group scale={1.1}><CuteWorker /></group>
+            {selected && (
+              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+                <ringGeometry args={[0.38, 0.46, 32]} />
+                <meshBasicMaterial color="#38bdf8" />
+              </mesh>
+            )}
           </>
         )}
         {showLabel && (
@@ -62,5 +61,194 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
         />
       ))}
     </>
+  );
+}
+
+const HAT = '#2f7fe0', SUIT = '#2f6fd0', SKIN = '#f6d2b8', HAIR = '#5a3a22', TAN = '#d98a2b', BELT = '#c98a3a';
+const BOOT = '#8b4a24', GREY = '#9aa0a8', EYE = '#4a2c1a', INK = '#1a1a1a';
+
+function Mat({ color, rough = 0.55 }: { color: string; rough?: number }) {
+  return <meshStandardMaterial color={color} roughness={rough} />;
+}
+
+/** Chibi worker (blue hard hat, coverall, tool belt, pliers), ~1.52 m tall at scale 1, facing south (+z). */
+function CuteWorker() {
+  return (
+    <group>
+      {/* Boots, legs */}
+      {[-0.08, 0.08].map((x) => (
+        <group key={x} position={[x, 0, 0]}>
+          <mesh position={[0, 0.05, 0.02]} castShadow>
+            <boxGeometry args={[0.12, 0.1, 0.18]} />
+            <Mat color={BOOT} />
+          </mesh>
+          <mesh position={[0, 0.12, 0]}>
+            <cylinderGeometry args={[0.068, 0.068, 0.05, 16]} />
+            <Mat color={TAN} />
+          </mesh>
+          <mesh position={[0, 0.25, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.065, 0.22, 16]} />
+            <Mat color={SUIT} />
+          </mesh>
+        </group>
+      ))}
+      {/* Coverall body */}
+      <mesh position={[0, 0.56, 0]} scale={[1.05, 1, 0.85]} castShadow>
+        <capsuleGeometry args={[0.17, 0.2, 8, 20]} />
+        <Mat color={SUIT} />
+      </mesh>
+      {/* Suspenders and chest strap */}
+      {[-0.08, 0.08].map((x) => (
+        <mesh key={x} position={[x, 0.6, 0.142]} raycast={() => null}>
+          <boxGeometry args={[0.04, 0.3, 0.02]} />
+          <Mat color={TAN} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.66, 0.15]} raycast={() => null}>
+        <boxGeometry args={[0.2, 0.025, 0.02]} />
+        <Mat color={GREY} />
+      </mesh>
+      {/* Tool belt, buckle, pouches */}
+      <mesh position={[0, 0.41, 0]} scale={[1.05, 1, 0.85]} raycast={() => null}>
+        <cylinderGeometry args={[0.185, 0.185, 0.05, 24]} />
+        <Mat color={BELT} />
+      </mesh>
+      <mesh position={[0, 0.41, 0.165]} raycast={() => null}>
+        <boxGeometry args={[0.06, 0.05, 0.02]} />
+        <Mat color="#e0b04a" rough={0.3} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.16, 0.35, 0.07]} rotation={[0, s * 0.5, 0]} castShadow>
+          <boxGeometry args={[0.08, 0.11, 0.06]} />
+          <Mat color="#e0a040" />
+        </mesh>
+      ))}
+      {/* Raised arm holding pliers (viewer's left) */}
+      <group position={[-0.17, 0.74, 0]} rotation={[0, 0, -2.3]}>
+        <mesh position={[0, -0.12, 0]} castShadow>
+          <capsuleGeometry args={[0.05, 0.16, 6, 12]} />
+          <Mat color={SUIT} />
+        </mesh>
+        <mesh position={[0, -0.25, 0]}>
+          <sphereGeometry args={[0.048, 16, 12]} />
+          <Mat color={SKIN} />
+        </mesh>
+        <group position={[0, -0.27, 0.02]} rotation={[0, 0, 2.3]}>
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.015, 0.0, 0]} rotation={[0, 0, s * -0.12]}>
+              <cylinderGeometry args={[0.014, 0.012, 0.14, 8]} />
+              <Mat color="#6b3a2a" />
+            </mesh>
+          ))}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.018, 0.11, 0]} rotation={[0, 0, s * 0.25]}>
+              <boxGeometry args={[0.016, 0.1, 0.012]} />
+              <Mat color={GREY} rough={0.25} />
+            </mesh>
+          ))}
+        </group>
+      </group>
+      {/* Other arm down by the side */}
+      <group position={[0.17, 0.74, 0]} rotation={[0, 0, 0.25]}>
+        <mesh position={[0, -0.12, 0]} castShadow>
+          <capsuleGeometry args={[0.05, 0.16, 6, 12]} />
+          <Mat color={SUIT} />
+        </mesh>
+        <mesh position={[0, -0.25, 0]}>
+          <sphereGeometry args={[0.048, 16, 12]} />
+          <Mat color={SKIN} />
+        </mesh>
+      </group>
+      {/* Head, ears */}
+      <mesh position={[0, 1.1, 0]} scale={[1.05, 0.95, 1]} castShadow>
+        <sphereGeometry args={[0.29, 32, 24]} />
+        <Mat color={SKIN} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.3, 1.07, 0]} scale={[0.6, 1, 1]}>
+          <sphereGeometry args={[0.06, 16, 12]} />
+          <Mat color={SKIN} />
+        </mesh>
+      ))}
+      {/* Hair cap showing as a fringe under the hat */}
+      <mesh position={[0, 1.1, -0.01]}>
+        <sphereGeometry args={[0.305, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.45]} />
+        <Mat color={HAIR} rough={0.8} />
+      </mesh>
+      {/* Fringe tufts on the forehead and hair over the ears */}
+      {[-0.13, -0.04, 0.05, 0.13].map((x, i) => (
+        <mesh key={x} position={[x, 1.2 - (i % 2) * 0.01, 0.27 - Math.abs(x) * 0.3]} rotation={[0.3, 0, (x > 0 ? -1 : 1) * 0.5]} scale={[1, 0.65, 0.55]}>
+          <sphereGeometry args={[0.065, 16, 12]} />
+          <Mat color={HAIR} rough={0.8} />
+        </mesh>
+      ))}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.265, 1.14, 0.02]} scale={[0.5, 1, 0.9]}>
+          <sphereGeometry args={[0.08, 16, 12]} />
+          <Mat color={HAIR} rough={0.8} />
+        </mesh>
+      ))}
+      {/* Eyes: white, brown iris, pupil, sparkle; eyebrows */}
+      {[-1, 1].map((s) => (
+        <group key={s} position={[s * 0.1, 1.06, 0.245]}>
+          <mesh scale={[1, 1.1, 0.5]}>
+            <sphereGeometry args={[0.068, 20, 16]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[0, -0.005, 0.025]} scale={[1, 1.1, 0.5]}>
+            <sphereGeometry args={[0.054, 20, 16]} />
+            <meshBasicMaterial color={EYE} />
+          </mesh>
+          <mesh position={[0, -0.005, 0.045]} scale={[1, 1.1, 0.5]}>
+            <sphereGeometry args={[0.03, 16, 12]} />
+            <meshBasicMaterial color={INK} />
+          </mesh>
+          <mesh position={[s * -0.018, 0.02, 0.06]}>
+            <sphereGeometry args={[0.014, 10, 8]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[0, 0.095, 0.02]} rotation={[0, 0, Math.PI / 2 + s * 0.15]}>
+            <capsuleGeometry args={[0.011, 0.05, 4, 8]} />
+            <Mat color={HAIR} />
+          </mesh>
+        </group>
+      ))}
+      {/* Rosy cheeks, nose, smile */}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.17, 0.98, 0.225]} scale={[1, 0.7, 0.3]} raycast={() => null}>
+          <sphereGeometry args={[0.05, 16, 12]} />
+          <meshBasicMaterial color="#f29b9b" transparent opacity={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0, 1.0, 0.285]}>
+        <sphereGeometry args={[0.02, 12, 8]} />
+        <Mat color="#efbfa2" />
+      </mesh>
+      <mesh position={[0, 0.95, 0.268]} rotation={[0, 0, Math.PI]}>
+        <torusGeometry args={[0.035, 0.007, 8, 16, Math.PI]} />
+        <meshBasicMaterial color="#a0473a" />
+      </mesh>
+      {/* Hard hat: dome, ridge, brim, badge */}
+      <mesh position={[0, 1.2, 0]} castShadow>
+        <sphereGeometry args={[0.32, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <Mat color={HAT} rough={0.35} />
+      </mesh>
+      <mesh position={[0, 1.44, 0]} scale={[0.3, 1, 1]} raycast={() => null}>
+        <sphereGeometry args={[0.1, 16, 12]} />
+        <Mat color={HAT} rough={0.35} />
+      </mesh>
+      <mesh position={[0, 1.2, 0.03]} castShadow>
+        <cylinderGeometry args={[0.36, 0.36, 0.035, 32]} />
+        <Mat color={HAT} rough={0.35} />
+      </mesh>
+      <mesh position={[0, 1.35, 0.288]} rotation={[-0.5, 0, 0]} raycast={() => null}>
+        <circleGeometry args={[0.07, 24]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh position={[0, 1.351, 0.291]} rotation={[-0.5, 0, 0]} raycast={() => null}>
+        <ringGeometry args={[0.035, 0.05, 24]} />
+        <meshBasicMaterial color={HAT} />
+      </mesh>
+    </group>
   );
 }
