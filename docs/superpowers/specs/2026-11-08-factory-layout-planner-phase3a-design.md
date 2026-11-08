@@ -48,7 +48,7 @@ interface MetricRow {
 const METRIC_ROWS: MetricRow[];
 ```
 
-Rows, in order: Material movement (Manhattan, lower), Straight-line movement (lower), Longest move (lower; label cell also shows the step names), Machines (null), Steps (null), Empty steps (lower), Footprint % (null), Operator area % (null), Clearance % (null), Free floor % (higher), Errors (lower), Warnings (lower).
+Rows, in order: Material movement (Manhattan, lower), Straight-line movement (lower), Longest move (lower; each value cell also shows the step names), Machines (null), Steps (null), Empty steps (lower), Footprint % (null), Operator area % (null), Clearance % (null), Free floor % (higher), Errors (lower), Warnings (lower).
 
 - `bestIndexes(row, metrics[]): number[]` — indexes holding the best non-null value; all of them on a tie; `[]` when `better` is null, fewer than two non-null values exist, or all values are equal.
 - Reuses `totalMovement`, `stepTransitions`, `areaBreakdown`, `validateLayout`. No new geometry.
