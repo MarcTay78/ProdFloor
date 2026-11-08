@@ -97,7 +97,7 @@ export const useProjectStore = create<ProjectState>()(
           })),
         addWorker(at) {
           const id = newId();
-          setLayout((l) => ({ ...l, workers: [...l.workers, { id, name: `Worker ${l.workers.length + 1}`, x: at.x, y: at.y, machineIds: [], rotation: 0, path: [] }] }));
+          setLayout((l) => ({ ...l, workers: [...l.workers, { id, name: `Worker ${l.workers.length + 1}`, x: at.x, y: at.y, machineIds: [], rotation: 0, path: [], role: 'operator' }] }));
           return id;
         },
         updateWorker: (id, patch) =>

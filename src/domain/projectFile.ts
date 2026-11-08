@@ -72,6 +72,7 @@ export function migrateProject(project: Project): { project: Project; notices: s
       if (!w) continue;
       if (typeof w.rotation !== 'number') w.rotation = 0;
       if (w.path === undefined) w.path = [];
+      if (w.role !== 'operator' && w.role !== 'handler') w.role = w.path?.length ? 'handler' : 'operator';
       if (!Array.isArray(w.machineIds)) { w.machineIds = []; continue; }
       const kept = w.machineIds.filter((id: string) => machineIds.has(id));
       staleCrew += w.machineIds.length - kept.length;

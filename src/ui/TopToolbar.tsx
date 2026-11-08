@@ -18,7 +18,7 @@ export function TopToolbar() {
   const ui = useUiStore();
   const fullView = isFullView(ui);
   const active = project.layouts.find((l) => l.id === project.activeLayoutId);
-  const canPlay = !!active?.flows.length || !!active?.workers.some((w) => w.path.length);
+  const canPlay = !!active?.flows.length || !!active?.workers.some((w) => w.role === 'operator' || w.path.length);
   const savedAt = ui.savedAt ? new Date(ui.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
@@ -56,7 +56,7 @@ export function TopToolbar() {
         className={ui.animating ? btnOn : btn}
         onClick={() => ui.toggle('animating')}
         disabled={!canPlay}
-        title={canPlay ? 'Animate parts along the workflow and workers along their walking paths' : 'Set up a workflow (Workflow tab) or a worker walking path first'}
+        title={canPlay ? 'Animate parts along the workflow, operators working and handlers walking their paths' : 'Set up a workflow (Workflow tab) or add a worker first'}
       >
         {ui.animating ? '⏸ Stop' : '▶ Play'}
       </button>

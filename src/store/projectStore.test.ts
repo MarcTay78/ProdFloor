@@ -211,7 +211,7 @@ describe('workers', () => {
     const a = s().addWorker({ x: 2, y: 3 });
     s().addWorker({ x: 4, y: 3 });
     expect(layout().workers.map((w) => w.name)).toEqual(['Worker 1', 'Worker 2']);
-    expect(layout().workers[0]).toEqual({ id: a, name: 'Worker 1', x: 2, y: 3, machineIds: [], rotation: 0, path: [] });
+    expect(layout().workers[0]).toEqual({ id: a, name: 'Worker 1', x: 2, y: 3, machineIds: [], rotation: 0, path: [], role: 'operator' });
   });
   test('updateWorker keeps only known machines, once each', () => {
     const m = s().addMachine('bandsaw', 3, 4)!;
