@@ -48,6 +48,9 @@ export function positionAt(legs: RouteLeg[], t: number): Point2 | null {
   return null;
 }
 
+/** Worker rotation (degrees, 0 = south, 90 = east) that faces along the floor direction (dx, dy). */
+export const facing = (dx: number, dy: number) => normDeg((Math.atan2(dx, -dy) * 180) / Math.PI);
+
 /** Walking speed of a worker, m/s (before the animation speed multiplier). */
 export const WALK_SPEED = 1.2;
 
@@ -78,7 +81,7 @@ export function walkPose(legs: RouteLeg[], t: number): (Point2 & { rotation: num
     if (r <= l.duration) {
       const k = r / l.duration;
       const dx = l.to.x - l.from.x, dy = l.to.y - l.from.y;
-      return { x: l.from.x + dx * k, y: l.from.y + dy * k, rotation: normDeg((Math.atan2(dx, -dy) * 180) / Math.PI) };
+      return { x: l.from.x + dx * k, y: l.from.y + dy * k, rotation: facing(dx, dy) };
     }
     r -= l.duration;
   }

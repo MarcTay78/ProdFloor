@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { CATALOGUE, createMachine } from './catalogue';
 import { createFactory } from './projectFile';
-import { partRoute, pathLength, positionAt, routeDuration, walkLoop, walkPose } from './simulation';
+import { facing, partRoute, pathLength, positionAt, routeDuration, walkLoop, walkPose } from './simulation';
 import type { Layout, Machine, WorkflowStep } from './types';
 import { deriveFlows } from './workflow';
 
@@ -86,5 +86,14 @@ describe('worker walking loop', () => {
     expect(north.rotation).toBeCloseTo(180, 6);
     const again = walkPose(legs, 10 + 1.5 / 1.2)!; // one full loop is 10 s
     expect(again.x).toBeCloseTo(1.5, 6);
+  });
+});
+
+describe('facing', () => {
+  test('degrees in the worker rotation convention', () => {
+    expect(facing(0, -1)).toBeCloseTo(0, 6); // south
+    expect(facing(1, 0)).toBeCloseTo(90, 6); // east
+    expect(facing(0, 1)).toBeCloseTo(180, 6); // north
+    expect(facing(-1, 0)).toBeCloseTo(270, 6); // west
   });
 });

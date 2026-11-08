@@ -74,9 +74,20 @@ describe('serialize / parse', () => {
     const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.file.project.layouts[0].workers).toEqual([{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid], rotation: 0, path: [] }]);
+      expect(r.file.project.layouts[0].workers).toEqual([{ id: 'w1', name: 'Ann', x: 2, y: 3, machineIds: [mid], rotation: 0, path: [], role: 'operator' }]);
       expect(r.notices.some((n) => n.includes('from workers'))).toBe(true);
     }
+  });
+
+  test('older workers get a role: handler when they have a path, operator otherwise', () => {
+    const p: any = sample();
+    p.layouts[0].workers = [
+      { id: 'w1', name: 'A', x: 1, y: 1, machineIds: [], rotation: 0, path: [{ x: 2, y: 2 }] },
+      { id: 'w2', name: 'B', x: 1, y: 1, machineIds: [], rotation: 0, path: [] },
+    ];
+    const r = parseProjectFile(JSON.stringify({ schemaVersion: 1, project: p }));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.file.project.layouts[0].workers.map((w) => w.role)).toEqual(['handler', 'operator']);
   });
 
   test('worker path must be a list of points', () => {
