@@ -1,8 +1,7 @@
-import { localToWorld } from './geometry';
 import type { Layout, Point2 } from './types';
 
 export interface RouteLeg {
-  /** dwell: passing through a machine (input to output point); move: along a flow to the next machine's input. */
+  /** dwell: waiting at a machine's centre; move: straight line to the next machine's centre. */
   kind: 'dwell' | 'move';
   from: Point2;
   to: Point2;
@@ -23,12 +22,12 @@ export function partRoute(layout: Layout, n: number, speed = 1, dwell = 1): Rout
   const legs: RouteLeg[] = [];
   picks.forEach((m, i) => {
     const prev = picks[i - 1];
-    const input = localToWorld(m, m.inputPoint);
+    const at = { x: m.x, y: m.y };
     if (prev && prev.id !== m.id) {
-      const from = localToWorld(prev, prev.outputPoint);
-      legs.push({ kind: 'move', from, to: input, duration: Math.hypot(input.x - from.x, input.y - from.y) / speed });
+      const from = { x: prev.x, y: prev.y };
+      legs.push({ kind: 'move', from, to: at, duration: Math.hypot(at.x - from.x, at.y - from.y) / speed });
     }
-    legs.push({ kind: 'dwell', from: input, to: localToWorld(m, m.outputPoint), duration: dwell });
+    legs.push({ kind: 'dwell', from: at, to: at, duration: dwell });
   });
   return legs;
 }
