@@ -128,7 +128,8 @@ export function FactoryCanvas() {
   const layout = activeLayout(project);
   const flat = viewMode === '2d';
   const shownMachines = layout.machines.map((m) => (dragPreview?.id === m.id ? { ...m, ...dragPreview } : m));
-  const shownWorkers = layout.workers.map((w) => (dragPreview?.id === w.id ? { ...w, x: dragPreview.x, y: dragPreview.y } : w));
+  const shownWorkers = layout.workers.map((w) => (dragPreview?.id === w.id ? { ...w, x: dragPreview.x, y: dragPreview.y, rotation: dragPreview.rotation } : w));
+  const pathEditing = useUiStore((s) => s.pathEditId !== null);
 
   const { status, operatorBlocked } = useMemo(() => {
     const s = new Map<string, MachineStatus>();
@@ -192,7 +193,9 @@ export function FactoryCanvas() {
         ))}
       </Canvas>
       <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-900/70 px-2 py-1 text-[11px] text-slate-300">
-        {flat ? 'Plan view · drag to pan · scroll to zoom · north is up' : 'Left-drag rotate · right-drag pan · scroll zoom'}
+        {pathEditing
+          ? 'Click the floor to add path points · Esc or Done to finish'
+          : flat ? 'Plan view · drag to pan · scroll to zoom · north is up' : 'Left-drag rotate · right-drag pan · scroll zoom'}
       </div>
     </div>
   );

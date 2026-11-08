@@ -1,7 +1,12 @@
 import { Html, Line } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react';
+import * as THREE from 'three';
+import { walkLoop, walkPose } from '../domain/simulation';
 import type { Machine, Worker } from '../domain/types';
 import { useProjectStore } from '../store/projectStore';
-import { toThree } from './coords';
+import { useUiStore } from '../store/uiStore';
+import { rotY, toThree } from './coords';
 import { useMachineDrag } from './DragController';
 
 interface Props {
@@ -12,35 +17,58 @@ interface Props {
   showLabel: boolean;
 }
 
-/** ~1.7 m person (disc in plan view). Drag to move; when selected, dashed lines to each assigned machine. */
+/**
+ * ~1.7 m person (disc with a front marker in plan view). Drag to move, drag the ring to rotate.
+ * When selected: dashed lines to assigned machines and the walking loop. While Play is on, walks its loop.
+ */
 export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }: Props) {
   const startDrag = useMachineDrag();
   const updateWorker = useProjectStore((s) => s.updateWorker);
+  const animating = useUiStore((s) => s.animating);
+  const speed = useUiStore((s) => s.animSpeed);
+  const body = useRef<THREE.Group>(null);
+  const clock = useRef(0);
+  const legs = useMemo(() => walkLoop(w), [w.x, w.y, w.path]); // eslint-disable-line react-hooks/exhaustive-deps
   const color = selected ? '#38bdf8' : '#f59e0b';
   const assigned = machines.filter((m) => w.machineIds.includes(m.id));
+  const commit = (p: { x: number; y: number; rotation: number }) => updateWorker(w.id, p);
+
+  // Pose is set here (not via props) so walking needs no React re-render; stopping snaps back to the saved pose.
+  useFrame((_, dt) => {
+    const g = body.current;
+    if (!g) return;
+    const pose = animating && legs.length ? walkPose(legs, (clock.current += Math.min(dt, 0.1) * speed)) : null;
+    if (!pose) clock.current = 0;
+    const p = pose ?? w;
+    g.position.set(...toThree(p.x, p.y, pose && !flat ? Math.abs(Math.sin(clock.current * 6)) * 0.04 : 0));
+    g.rotation.y = rotY(p.rotation);
+  });
+
+  const loop = [{ x: w.x, y: w.y }, ...w.path, { x: w.x, y: w.y }];
 
   return (
     <>
-      <group
-        position={toThree(w.x, w.y)}
-        onPointerDown={(e) => startDrag(w, 'move', e, (p) => updateWorker(w.id, { x: p.x, y: p.y }))}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <group ref={body} onPointerDown={(e) => startDrag(w, 'move', e, commit)} onClick={(e) => e.stopPropagation()}>
         {flat ? (
-          <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.3, 24]} />
-            <meshBasicMaterial color={color} />
-          </mesh>
-        ) : (
           <>
-            <group scale={1.1}><CuteWorker /></group>
-            {selected && (
-              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
-                <ringGeometry args={[0.38, 0.46, 32]} />
-                <meshBasicMaterial color="#38bdf8" />
-              </mesh>
-            )}
+            <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.3, 24]} />
+              <meshBasicMaterial color={color} />
+            </mesh>
+            {/* Front marker so the facing shows in plan view. */}
+            <mesh position={[0, 0.07, 0.17]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} raycast={() => null}>
+              <circleGeometry args={[0.1, 3]} />
+              <meshBasicMaterial color="#f8fafc" />
+            </mesh>
           </>
+        ) : (
+          <group scale={1.1}><CuteWorker /></group>
+        )}
+        {selected && (
+          <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={(e) => startDrag(w, 'rotate', e, commit)}>
+            <torusGeometry args={[0.5, 0.05, 8, 48]} />
+            <meshBasicMaterial color="#38bdf8" transparent opacity={0.7} side={THREE.DoubleSide} />
+          </mesh>
         )}
         {showLabel && (
           <Html zIndexRange={[5, 0]} position={[0, (flat ? 0.1 : 1.7) + 0.25, 0]} center className="pointer-events-none select-none whitespace-nowrap rounded bg-amber-900/80 px-1.5 py-0.5 text-[11px] text-amber-100">
@@ -60,6 +88,17 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
           raycast={() => null}
         />
       ))}
+      {selected && w.path.length > 0 && (
+        <>
+          <Line points={loop.map((p) => toThree(p.x, p.y, 0.04))} color="#e879f9" lineWidth={3} dashed dashSize={0.4} gapSize={0.2} raycast={() => null} />
+          {w.path.map((p, i) => (
+            <mesh key={i} position={toThree(p.x, p.y, 0.05)} raycast={() => null}>
+              <sphereGeometry args={[0.25, 16, 10]} />
+              <meshBasicMaterial color="#e879f9" />
+            </mesh>
+          ))}
+        </>
+      )}
     </>
   );
 }

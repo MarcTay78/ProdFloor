@@ -17,7 +17,8 @@ export function TopToolbar() {
   const future = useStore(useProjectStore.temporal, (s) => s.futureStates.length);
   const ui = useUiStore();
   const fullView = isFullView(ui);
-  const hasFlows = project.layouts.some((l) => l.id === project.activeLayoutId && l.flows.length > 0);
+  const active = project.layouts.find((l) => l.id === project.activeLayoutId);
+  const canPlay = !!active?.flows.length || !!active?.workers.some((w) => w.path.length);
   const savedAt = ui.savedAt ? new Date(ui.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
@@ -73,10 +74,10 @@ export function TopToolbar() {
       <button
         className={ui.animating ? btnOn : btn}
         onClick={() => ui.toggle('animating')}
-        disabled={!hasFlows}
-        title={hasFlows ? 'Animate parts moving through the workflow' : 'Set up a workflow first (Workflow tab)'}
+        disabled={!canPlay}
+        title={canPlay ? 'Animate parts along the workflow and workers along their walking paths' : 'Set up a workflow (Workflow tab) or a worker walking path first'}
       >
-        {ui.animating ? '⏸ Stop parts' : '▶ Play parts'}
+        {ui.animating ? '⏸ Stop' : '▶ Play'}
       </button>
       {ui.animating && (
         <>

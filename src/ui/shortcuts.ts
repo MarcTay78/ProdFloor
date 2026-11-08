@@ -15,13 +15,16 @@ export function useShortcuts(): void {
       const key = e.key.toLowerCase();
       if (ctrl && key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if (ctrl && (key === 'y' || (key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); return; }
-      if (e.key === 'Escape') { ui.select(null); return; }
+      if (e.key === 'Escape') { if (ui.pathEditId) ui.setPathEdit(null); else ui.select(null); return; }
       if (!ctrl && !e.altKey && key === 'f') { toggleFullView(); return; }
       if (!id) return;
       const layout = activeLayout(store.project);
       const m = layout.machines.find((x) => x.id === id);
       if (!m) {
-        if ((e.key === 'Delete' || e.key === 'Backspace') && layout.workers.some((w) => w.id === id)) { store.removeWorker(id); ui.select(null); }
+        const w = layout.workers.find((x) => x.id === id);
+        if (!w) return;
+        if (e.key === 'Delete' || e.key === 'Backspace') { store.removeWorker(id); ui.select(null); }
+        else if (!ctrl && key === 'r') store.updateWorker(id, { rotation: normDeg(w.rotation + (e.shiftKey ? -90 : 90)) });
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') { store.deleteMachines([id]); ui.select(null); }

@@ -2,9 +2,10 @@ import { Grid, Html, Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { rectCorners, type Rect } from '../domain/geometry';
+import { rectCorners, snapTo, type Rect } from '../domain/geometry';
 import type { Factory, Opening, WallSide } from '../domain/types';
 import { doorKeepClearRect, pillarRect, wallRect, zoneRect } from '../domain/validation';
+import { activeLayout, useProjectStore } from '../store/projectStore';
 import { useUiStore } from '../store/uiStore';
 import { toThree, rotY } from './coords';
 import { mat } from './models/parts';
@@ -144,7 +145,12 @@ export function FactoryShell({ factory: f, flat }: { factory: Factory; flat: boo
   const { showWalls, showGrid, select } = useUiStore();
   const tex = useConcreteTexture(f.length, f.width);
   const onFloorClick = (e: ThreeEvent<MouseEvent>) => {
-    if (e.delta < 4) select(null);
+    if (e.delta >= 4) return; // a camera drag, not a click
+    const { pathEditId, snap } = useUiStore.getState();
+    if (!pathEditId) return select(null);
+    const store = useProjectStore.getState();
+    const w = activeLayout(store.project).workers.find((x) => x.id === pathEditId);
+    if (w) store.updateWorker(w.id, { path: [...w.path, { x: snapTo(e.point.x, snap), y: snapTo(-e.point.z, snap) }] });
   };
 
   return (

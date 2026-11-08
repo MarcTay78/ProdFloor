@@ -7,7 +7,11 @@ export type LeftTab = 'library' | 'workflow' | 'suggestions';
 
 interface UiState {
   selectedId: string | null;
+  /** Selecting a different item also ends path editing. */
   select(id: string | null): void;
+  /** Worker whose walking path is being drawn (floor clicks add points), or null. */
+  pathEditId: string | null;
+  setPathEdit(id: string | null): void;
   viewMode: '3d' | '2d';
   setViewMode(m: '3d' | '2d'): void;
   cameraPreset: CameraPreset;
@@ -59,7 +63,9 @@ interface UiState {
 
 export const useUiStore = create<UiState>()((set) => ({
   selectedId: null,
-  select: (selectedId) => set({ selectedId }),
+  select: (selectedId) => set((s) => ({ selectedId, pathEditId: s.pathEditId === selectedId ? s.pathEditId : null })),
+  pathEditId: null,
+  setPathEdit: (pathEditId) => set({ pathEditId }),
   viewMode: '3d',
   setViewMode: (viewMode) =>
     set((s) => ({ viewMode, cameraPreset: viewMode === '2d' ? 'top' : 'iso', cameraNonce: s.cameraNonce + 1 })),
