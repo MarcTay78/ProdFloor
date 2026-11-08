@@ -2,12 +2,13 @@ import { Html, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { WALK_SPEED, walkLoop, walkPose } from '../domain/simulation';
+import { FORKLIFT_SPEED, WALK_SPEED, walkLoop, walkPose } from '../domain/simulation';
 import type { Machine, Worker } from '../domain/types';
 import { useProjectStore } from '../store/projectStore';
 import { useUiStore } from '../store/uiStore';
 import { rotY, toThree } from './coords';
 import { useMachineDrag } from './DragController';
+import { Forklift, FORKLIFT_SIZE } from './models/forklift';
 
 interface Props {
   worker: Worker;
@@ -18,7 +19,7 @@ interface Props {
 }
 
 /**
- * ~1.7 m person (disc with a front marker in plan view). Drag to move, drag the ring to rotate.
+ * ~1.7 m person, or a forklift with its driver (footprint with a front marker in plan view). Drag to move, drag the ring to rotate.
  * When selected: dashed lines to assigned machines and the walking loop. While Play is on, walks its loop.
  */
 export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }: Props) {
@@ -29,7 +30,8 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
   const body = useRef<THREE.Group>(null);
   const clock = useRef(0);
   const limbs = useRef<Limbs>({ legs: [], arm: null, tool: null, model: null });
-  const legs = useMemo(() => walkLoop(w), [w.x, w.y, w.path]); // eslint-disable-line react-hooks/exhaustive-deps
+  const forklift = w.role === 'forklift';
+  const legs = useMemo(() => walkLoop(w, forklift ? FORKLIFT_SPEED : WALK_SPEED), [w.x, w.y, w.path, forklift]); // eslint-disable-line react-hooks/exhaustive-deps
   const color = selected ? '#38bdf8' : '#f59e0b';
   const assigned = machines.filter((m) => w.machineIds.includes(m.id));
   const commit = (p: { x: number; y: number; rotation: number }) => updateWorker(w.id, p);
@@ -38,13 +40,13 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
   useFrame((_, dt) => {
     const g = body.current;
     if (!g) return;
-    const walking = animating && w.role === 'handler' && legs.length > 0;
+    const walking = animating && w.role !== 'operator' && legs.length > 0;
     const working = animating && w.role === 'operator';
     clock.current = walking || working ? clock.current + Math.min(dt, 0.1) * speed : 0;
     const pose = walking ? walkPose(legs, clock.current) : null;
     const p = pose ?? w;
     let legSwing = 0, armX = 0, toolZ = 0, lean = 0, bob = 0;
-    if (pose) {
+    if (pose && !forklift) {
       // Walk cycle: one leg swing per STEP metres walked; free arm swings opposite; small bob on each step.
       const phase = (clock.current * WALK_SPEED * Math.PI) / STEP;
       legSwing = Math.sin(phase) * 0.55;
@@ -73,27 +75,29 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
       <group ref={body} onPointerDown={(e) => startDrag(w, 'move', e, commit)} onClick={(e) => e.stopPropagation()}>
         {flat ? (
           <>
-            <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[0.3, 24]} />
-              <meshBasicMaterial color={color} />
+            <mesh position={[0, 0.06, forklift ? FORKLIFT_Z : 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              {forklift ? <planeGeometry args={[FORKLIFT_SIZE.width, FORKLIFT_SIZE.length]} /> : <circleGeometry args={[0.3, 24]} />}
+              <meshBasicMaterial color={forklift && !selected ? '#e5481c' : color} />
             </mesh>
             {/* Front marker so the facing shows in plan view. */}
-            <mesh position={[0, 0.07, 0.17]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} raycast={() => null}>
+            <mesh position={[0, 0.07, forklift ? 1.2 : 0.17]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} raycast={() => null}>
               <circleGeometry args={[0.1, 3]} />
               <meshBasicMaterial color="#f8fafc" />
             </mesh>
           </>
         ) : (
-          <group scale={1.1} ref={(g) => { limbs.current.model = g; }}><CuteWorker limbs={limbs} /></group>
+          forklift
+            ? <Forklift driver={<CuteWorker limbs={limbs} />} />
+            : <group scale={1.1} ref={(g) => { limbs.current.model = g; }}><CuteWorker limbs={limbs} /></group>
         )}
         {selected && (
           <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={(e) => startDrag(w, 'rotate', e, commit)}>
-            <torusGeometry args={[0.5, 0.05, 8, 48]} />
+            <torusGeometry args={[forklift ? 1.9 : 0.5, 0.05, 8, 64]} />
             <meshBasicMaterial color="#38bdf8" transparent opacity={0.7} side={THREE.DoubleSide} />
           </mesh>
         )}
         {showLabel && (
-          <Html zIndexRange={[5, 0]} position={[0, (flat ? 0.1 : 1.7) + 0.25, 0]} center className="pointer-events-none select-none whitespace-nowrap rounded bg-amber-900/80 px-1.5 py-0.5 text-[11px] text-amber-100">
+          <Html zIndexRange={[5, 0]} position={[0, (flat ? 0.1 : forklift ? FORKLIFT_SIZE.height : 1.7) + 0.25, 0]} center className="pointer-events-none select-none whitespace-nowrap rounded bg-amber-900/80 px-1.5 py-0.5 text-[11px] text-amber-100">
             {w.name}
           </Html>
         )}
@@ -110,7 +114,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
           raycast={() => null}
         />
       ))}
-      {selected && w.role === 'handler' && w.path.length > 0 && (
+      {selected && w.role !== 'operator' && w.path.length > 0 && (
         <>
           <Line points={loop.map((p) => toThree(p.x, p.y, 0.04))} color="#e879f9" lineWidth={3} dashed dashSize={0.4} gapSize={0.2} raycast={() => null} />
           {w.path.map((p, i) => (
@@ -131,6 +135,9 @@ const BOOT = '#8b4a24', GREY = '#9aa0a8', EYE = '#4a2c1a', INK = '#1a1a1a';
 function Mat({ color, rough = 0.55 }: { color: string; rough?: number }) {
   return <meshStandardMaterial color={color} roughness={rough} />;
 }
+
+/** Plan-view centre of the forklift footprint along its length (forks stick out in front). */
+const FORKLIFT_Z = (2.2 - 1.1) / 2;
 
 /** Hip height (model units) where the legs pivot. */
 const HIP = 0.36;

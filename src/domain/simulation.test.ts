@@ -75,6 +75,11 @@ describe('worker walking loop', () => {
     expect(pathLength(w)).toBeCloseTo(12, 6);
   });
 
+  test('speed can be set (forklifts drive faster)', () => {
+    const legs = walkLoop(w, 2);
+    expect(legs[0].duration).toBeCloseTo(1.5, 6); // 3 m at 2 m/s
+  });
+
   test('pose moves along legs, faces travel direction and wraps', () => {
     const legs = walkLoop(w);
     const east = walkPose(legs, 1.5 / 1.2)!;

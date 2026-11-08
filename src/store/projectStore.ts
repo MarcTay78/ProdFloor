@@ -4,7 +4,7 @@ import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
 import { autoArrange } from '../domain/recommend';
 import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
-import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Point2, ProcessArea, Project, Worker, WorkflowStep } from '../domain/types';
+import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Point2, ProcessArea, Project, Worker, WorkerRole, WorkflowStep } from '../domain/types';
 import { nextAreaColor } from '../domain/areas';
 import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
 
@@ -45,8 +45,8 @@ interface ProjectState {
   updateArea(id: string, patch: Partial<Pick<ProcessArea, 'name' | 'color'>>): void;
   /** Removes the area and unassigns its machines (one undo step). */
   removeArea(id: string): void;
-  /** New worker on the active layout's floor ("Worker N"); returns its id. */
-  addWorker(at: Point2): string;
+  /** New worker on the active layout's floor ("Worker N", or "Forklift N" for a forklift); returns its id. */
+  addWorker(at: Point2, role?: WorkerRole): string;
   /** machineIds are deduped and limited to machines of the active layout. */
   updateWorker(id: string, patch: Partial<Omit<Worker, 'id'>>): void;
   removeWorker(id: string): void;
@@ -95,9 +95,14 @@ export const useProjectStore = create<ProjectState>()(
             areas: l.areas.filter((a) => a.id !== id),
             machines: l.machines.map((m) => (m.areaId === id ? { ...m, areaId: undefined } : m)),
           })),
-        addWorker(at) {
+        addWorker(at, role = 'operator') {
           const id = newId();
-          setLayout((l) => ({ ...l, workers: [...l.workers, { id, name: `Worker ${l.workers.length + 1}`, x: at.x, y: at.y, machineIds: [], rotation: 0, path: [], role: 'operator' }] }));
+          setLayout((l) => {
+            const forklift = role === 'forklift';
+            const n = l.workers.filter((w) => (w.role === 'forklift') === forklift).length + 1;
+            const name = `${forklift ? 'Forklift' : 'Worker'} ${n}`;
+            return { ...l, workers: [...l.workers, { id, name, x: at.x, y: at.y, machineIds: [], rotation: 0, path: [], role }] };
+          });
           return id;
         },
         updateWorker: (id, patch) =>

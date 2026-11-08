@@ -45,11 +45,11 @@ export interface Worker {
   rotation: number;
   /** Walking loop: from (x, y) through these floor points in order and back. */
   path: Point2[];
-  /** operator: stands and works at a machine; handler: moves material along its walking path. */
+  /** operator: stands and works at a machine; handler: moves material along its walking path; forklift: drives a forklift along its path. */
   role: WorkerRole;
 }
 
-export type WorkerRole = 'operator' | 'handler';
+export type WorkerRole = 'operator' | 'handler' | 'forklift';
 
 export interface MachineType {
   id: string;
