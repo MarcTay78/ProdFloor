@@ -205,3 +205,43 @@ describe('process areas', () => {
     expect(layout().areas[0].color).not.toBe(layout().areas[1].color);
   });
 });
+
+describe('workers', () => {
+  test('addWorker names in order and lands in the active layout', () => {
+    const a = s().addWorker({ x: 2, y: 3 });
+    s().addWorker({ x: 4, y: 3 });
+    expect(layout().workers.map((w) => w.name)).toEqual(['Worker 1', 'Worker 2']);
+    expect(layout().workers[0]).toEqual({ id: a, name: 'Worker 1', x: 2, y: 3, machineIds: [] });
+  });
+  test('updateWorker keeps only known machines, once each', () => {
+    const m = s().addMachine('bandsaw', 3, 4)!;
+    const w = s().addWorker({ x: 1, y: 1 });
+    s().updateWorker(w, { machineIds: [m, m, 'ghost'], name: 'Ann' });
+    expect(layout().workers[0]).toMatchObject({ name: 'Ann', machineIds: [m] });
+  });
+  test('deleteMachines strips the machine from workers', () => {
+    const a = s().addMachine('bandsaw', 3, 4)!;
+    const b = s().addMachine('bandsaw', 8, 4)!;
+    const w = s().addWorker({ x: 1, y: 1 });
+    s().updateWorker(w, { machineIds: [a, b] });
+    s().deleteMachines([a]);
+    expect(layout().workers[0].machineIds).toEqual([b]);
+  });
+  test('removeWorker', () => {
+    const w = s().addWorker({ x: 1, y: 1 });
+    s().removeWorker(w);
+    expect(layout().workers).toEqual([]);
+  });
+  test('undo reverts addWorker', () => {
+    s().addWorker({ x: 1, y: 1 });
+    expect(canUndo()).toBe(true);
+    undo();
+    expect(layout().workers).toEqual([]);
+  });
+  test('duplicateLayout keeps workers', () => {
+    s().addWorker({ x: 1, y: 1 });
+    s().duplicateLayout(layout().id);
+    expect(layout().name).toMatch(/\(copy\)$/);
+    expect(layout().workers.map((w) => w.name)).toEqual(['Worker 1']);
+  });
+});
