@@ -11,6 +11,7 @@ export function LeftLibrary() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
   const addWhitePartLayout = useProjectStore((s) => s.addWhitePartLayout);
+  const addFinishingLayout = useProjectStore((s) => s.addFinishingLayout);
   const addWorker = useProjectStore((s) => s.addWorker);
   const { select, openDialog, openCategories, toggleCategory } = useUiStore();
   const [query, setQuery] = useState('');
@@ -111,6 +112,13 @@ export function LeftLibrary() {
           title="Adds a new layout in this building with timber storage → cutting → planing → joinery → drilling → shaping → sanding → inspection → WIP, linked in order"
         >
           + White-part production line
+        </button>
+        <button
+          className={`${btn} w-full`}
+          onClick={() => { addFinishingLayout(); select(null); }}
+          title="Adds a new layout in this building: overhead hanging line loop past three spray booths and through a drying room, with sprayers and a loader. Press Play to run the line."
+        >
+          + Finishing department sample
         </button>
         <button className={`${btn} w-full`} onClick={() => openDialog('customType')}>+ Custom machine type</button>
       </div>

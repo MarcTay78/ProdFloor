@@ -29,6 +29,10 @@ export interface Machine {
   color?: string;
   /** Process area the user assigned this machine to (Layout.areas). */
   areaId?: string;
+  /** Overhead slope pieces: height climbed/dropped above the track height; unset = up to 0.5 m under the ceiling. */
+  rise?: number;
+  /** Overhead line pieces: hooks run from the exit end back to the entry end during Play. */
+  reverse?: boolean;
 }
 
 /** User-defined group of machines by process stage (e.g. "Cutting", "Sanding"); drawn on the floor around its machines. */

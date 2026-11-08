@@ -34,6 +34,36 @@ describe('validateLayout', () => {
     expect(codes(layout([box(5, 5, 2, 1, { height: 7 })]))).toEqual(['TOO_TALL']);
   });
 
+  test('a roller conveyor links machines: touching or overlapping them is not a problem', () => {
+    // Saw at x 4..6 with clearance and an operator area; conveyor x 5.8..7.3 overlaps its end and its zones.
+    const saw = box(5, 5, 2, 1, { clearance: { front: 0.6, back: 0.6, left: 0.6, right: 0.6 }, operatorArea: { side: 'right', depth: 0.9, width: 1 } });
+    const conveyor = { ...createMachine(CATALOGUE.find((t) => t.id === 'roller-conveyor')!, 6.55, 5), length: 1.5, width: 1 };
+    expect(validateLayout(layout([saw, conveyor]))).toEqual([]);
+    // Same spot with an ordinary machine is still an error.
+    const other = box(6.55, 5, 1.5, 1);
+    expect(codes(layout([saw, other]))).toContain('MACHINE_OVERLAP');
+  });
+
+  test('a conveyor still has to stay inside the building', () => {
+    const conveyor = createMachine(CATALOGUE.find((t) => t.id === 'roller-conveyor')!, 19.6, 5);
+    expect(codes(layout([conveyor]))).toEqual(['OUTSIDE_BUILDING']);
+  });
+
+  test('an overhead conveyor passes over machines, pillars and door access areas', () => {
+    const f = factory({
+      pillars: [{ id: 'p', x: 8, y: 5, sizeX: 0.4, sizeY: 0.4 }],
+      doors: [{ id: 'd', name: 'Door', wall: 'south', offset: 8, width: 2, height: 2.2, keepClear: 6 }],
+    });
+    const line = { ...createMachine(CATALOGUE.find((t) => t.id === 'overhead-conveyor')!, 7, 5), length: 6 };
+    expect(validateLayout(layout([box(6, 5), line], f))).toEqual([]);
+  });
+
+  test('an overhead slope with a set drop height warns only when its top is above the ceiling', () => {
+    const drop = createMachine(CATALOGUE.find((t) => t.id === 'overhead-conveyor-down')!, 7, 5);
+    expect(codes(layout([{ ...drop, rise: 1.5 }]))).toEqual([]);
+    expect(codes(layout([{ ...drop, rise: 3.5 }]))).toEqual(['TOO_TALL']);
+  });
+
   test('two overlapping machines produce one pair warning', () => {
     const a = box(5, 5), b = box(6, 5);
     const w = validateLayout(layout([a, b]));

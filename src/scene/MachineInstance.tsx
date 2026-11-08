@@ -33,7 +33,7 @@ export const MachineInstance = memo(function MachineInstance({ machine: m, proje
   const type = findType(project, m.typeId);
   const Model = getModel(type?.model ?? 'generic');
   const modelKey = m.modelOverride ?? project.typeModels[m.typeId];
-  const builtIn = <Model l={m.length} w={m.width} h={m.height} color={m.color} />;
+  const builtIn = <Model l={m.length} w={m.width} h={m.height} color={m.color} rise={m.rise} reverse={m.reverse} />;
   const catColor = CATEGORY_COLOR[type?.category ?? 'custom'];
   const statusColor = status === 'error' ? '#ef4444' : status === 'warning' ? '#f59e0b' : null;
   const boxH = showModel ? m.height : 0.04;

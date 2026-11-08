@@ -1,4 +1,5 @@
 import { useStore } from 'zustand';
+import { OVERHEAD_TYPES } from '../domain/catalogue';
 import { saveNow } from '../store/persistence';
 import { redo, undo, useProjectStore } from '../store/projectStore';
 import { isFullView, toggleFullView, useUiStore, type CameraPreset } from '../store/uiStore';
@@ -18,7 +19,7 @@ export function TopToolbar() {
   const ui = useUiStore();
   const fullView = isFullView(ui);
   const active = project.layouts.find((l) => l.id === project.activeLayoutId);
-  const canPlay = !!active?.flows.length || !!active?.workers.some((w) => w.role === 'operator' || w.path.length);
+  const canPlay = !!active?.flows.length || !!active?.workers.some((w) => w.role === 'operator' || w.path.length) || !!active?.machines.some((m) => OVERHEAD_TYPES.has(m.typeId));
   const savedAt = ui.savedAt ? new Date(ui.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (

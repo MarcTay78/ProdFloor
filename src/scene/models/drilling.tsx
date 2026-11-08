@@ -114,3 +114,63 @@ export function MultiHeadDrill({ l, w, h, color }: ModelProps) {
     </group>
   );
 }
+
+const tableGreen = new THREE.MeshStandardMaterial({ color: '#2f9e44', metalness: 0.2, roughness: 0.45 });
+const baseWhite = new THREE.MeshStandardMaterial({ color: '#e9e7e0', metalness: 0.15, roughness: 0.55 });
+
+/**
+ * Multi-head table drilling machine (gantry CNC with a row of spindles): white bed with a black vacuum table,
+ * green gantry sides, white beam with six spindles on the operator (front, -z) face, green Z column with air
+ * cylinders on top, and a separate control cabinet at the -x end.
+ */
+export function MultiHeadTableDrill({ l, w, h, color }: ModelProps) {
+  const green = usePaint(color, tableGreen);
+  const cab = Math.min(0.6, l * 0.18); // control cabinet length along x
+  const x0 = -l / 2 + cab + 0.05, x1 = l / 2; // bed extent
+  const bl = x1 - x0, bx = (x0 + x1) / 2;
+  const bedH = Math.min(0.78, h * 0.34), bw = w * 0.92;
+  const beamY = bedH + 0.5, beamZ = 0;
+  const heads = 6, span = bl * 0.62;
+  return (
+    <>
+      {/* Bed with feet, black vacuum table and green edge trim */}
+      <B p={[bx, bedH / 2, 0]} s={[bl, bedH, bw]} m={baseWhite} />
+      {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+        <B key={`${sx}${sz}`} p={[bx + sx * (bl / 2 - 0.12), 0.03, sz * (bw / 2 - 0.1)]} s={[0.24, 0.06, 0.2]} m={baseWhite} />
+      )))}
+      <B p={[bx, bedH + 0.03, 0]} s={[bl * 0.96, 0.06, bw * 0.94]} m={mat.dark} />
+      {[-1, 1].map((s) => <B key={s} p={[bx, bedH + 0.035, s * bw * 0.48]} s={[bl * 0.96, 0.03, 0.03]} m={green} />)}
+      {/* Air manifold valves on the bed front */}
+      {[0, 1, 2, 3].map((i) => (
+        <C key={i} p={[bx - bl * 0.25 + i * 0.22, bedH * 0.45, -bw / 2 - 0.02]} rad={0.06} len={0.04} m={mat.yellow} axis="z" />
+      ))}
+      {/* Gantry: green side plates, white beam with a front cover */}
+      {[-1, 1].map((s) => (
+        <B key={s} p={[bx + s * (bl / 2 - 0.05), bedH + 0.35, beamZ]} s={[0.14, 0.7, 0.55]} m={green} />
+      ))}
+      <B p={[bx, beamY, beamZ]} s={[bl, 0.32, 0.28]} m={baseWhite} />
+      {/* Row of spindles hanging from the front of the beam */}
+      {Array.from({ length: heads }, (_, i) => {
+        const x = bx - span / 2 + (i * span) / (heads - 1);
+        return (
+          <group key={i}>
+            <C p={[x, beamY - 0.12, beamZ - 0.22]} rad={0.07} len={0.18} m={mat.steel} />
+            <C p={[x, beamY - 0.28, beamZ - 0.22]} rad={0.055} rad2={0.035} len={0.16} m={mat.steel} />
+            <C p={[x, beamY - 0.39, beamZ - 0.22]} rad={0.012} len={0.08} m={mat.blade} />
+            <C p={[x, beamY + 0.02, beamZ - 0.22]} rad={0.02} len={0.12} m={mat.rubber} />
+          </group>
+        );
+      })}
+      {/* Z column with cable chains and the green air-cylinder head on top */}
+      <B p={[bx, beamY + 0.55, beamZ + 0.05]} s={[0.35, 0.8, 0.22]} m={green} />
+      {[-1, 1].map((s) => <B key={s} p={[bx + s * 0.24, beamY + 0.5, beamZ + 0.05]} s={[0.07, 0.7, 0.07]} m={mat.rubber} />)}
+      <B p={[bx, h - 0.1, beamZ]} s={[Math.min(1.2, bl * 0.45), 0.14, 0.3]} m={green} />
+      {[-0.45, -0.15, 0.15, 0.45].map((k) => (
+        <C key={k} p={[bx + k * Math.min(1.2, bl * 0.45), h - 0.22, beamZ - 0.08]} rad={0.05} len={0.12} m={green} />
+      ))}
+      {/* Separate control cabinet on castors at the -x end */}
+      <B p={[-l / 2 + cab / 2, 0.55, -w * 0.1]} s={[cab, 1.0, Math.min(0.7, w * 0.3)]} m={baseWhite} />
+      <Panel p={[-l / 2 + cab / 2, 1.1, -w * 0.1 - Math.min(0.7, w * 0.3) / 2 + 0.05]} s={[cab * 0.8, 0.22, 0.1]} />
+    </>
+  );
+}

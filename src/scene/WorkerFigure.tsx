@@ -19,7 +19,7 @@ interface Props {
 }
 
 /**
- * ~1.7 m person, or a forklift with its driver (footprint with a front marker in plan view). Drag to move, drag the ring to rotate.
+ * ~1.7 m person, or a forklift with its driver (footprint with a front marker in plan view). Ctrl + drag to move, drag the ring to rotate.
  * When selected: dashed lines to assigned machines and the walking loop. While Play is on, walks its loop.
  */
 export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }: Props) {
@@ -54,7 +54,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
       bob = Math.abs(Math.sin(phase)) * 0.025;
     } else if (working) {
       // Work loop: free arm reaches forward to feed the machine, tool arm works at double tempo, body leans in.
-      const phase = clock.current * 1.2;
+      const phase = clock.current * WORK_RATE;
       armX = -0.9 + Math.sin(phase) * 0.35;
       toolZ = Math.sin(phase * 2) * 0.35;
       lean = 0.06 + Math.sin(phase) * 0.04;
@@ -138,6 +138,9 @@ function Mat({ color, rough = 0.55 }: { color: string; rough?: number }) {
 
 /** Plan-view centre of the forklift footprint along its length (forks stick out in front). */
 const FORKLIFT_Z = (2.2 - 1.1) / 2;
+
+/** Operator work-loop speed, radians per simulated second (raise to speed up the hand motion). */
+const WORK_RATE = 4.0;
 
 /** Hip height (model units) where the legs pivot. */
 const HIP = 0.36;

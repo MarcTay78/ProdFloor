@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { allTypes, findType } from '../domain/catalogue';
+import { OVERHEAD_TYPES, SLOPE_TYPES, allTypes, findType, slopeRise } from '../domain/catalogue';
 import { normDeg } from '../domain/geometry';
 import { facing, pathLength } from '../domain/simulation';
 import type { Machine, Side, Worker, WorkerRole } from '../domain/types';
@@ -31,7 +31,7 @@ export function RightInspector() {
         <h3 className="text-sm font-medium">{layout.name}</h3>
         <p className="mt-1 text-xs text-slate-400">{layout.machines.length} machines placed.</p>
         <p className="mt-4 text-xs leading-relaxed text-slate-500">
-          Click a machine to edit it. Drag to move (hold Alt to skip snapping). Drag the ring to rotate (Shift for 1° steps).
+          Click a machine to edit it. Ctrl + drag to move (also hold Alt to skip snapping). Drag the ring to rotate (Shift for 1° steps).
           Shortcuts: R rotate 90°, Ctrl+D duplicate, Delete remove, Ctrl+Z / Ctrl+Y undo / redo, Esc deselect.
         </p>
         <AreaManager />
@@ -45,7 +45,7 @@ export function RightInspector() {
   const resetToType = () => {
     if (!type) return;
     const d = type.defaults;
-    set({ length: d.length, width: d.width, height: d.height, clearance: { ...d.clearance }, operatorArea: { ...d.operatorArea } });
+    set({ length: d.length, width: d.width, height: d.height, rise: undefined, clearance: { ...d.clearance }, operatorArea: { ...d.operatorArea } });
   };
 
   return (
@@ -81,12 +81,20 @@ export function RightInspector() {
         </select>
       </label>
       <button className={`${btn} mt-1 w-full`} onClick={resetToType}>Reset to type defaults</button>
+      {OVERHEAD_TYPES.has(m.typeId) && (
+        <label className="mt-2 flex items-center gap-1 text-xs text-slate-400" title="Play runs the hooks from the exit end back to the entry end">
+          <input type="checkbox" checked={!!m.reverse} onChange={(e) => set({ reverse: e.target.checked || undefined })} /> Reverse line direction
+        </label>
+      )}
       <p className="mt-1 text-xs text-slate-400">Workers: <span className="text-slate-200">{crew.length ? crew.join(', ') : 'none'}</span></p>
 
       <Section title="Dimensions">
         <NumberField label="Length" value={m.length} min={0.05} onCommit={(v) => set({ length: v })} />
         <NumberField label="Width" value={m.width} min={0.05} onCommit={(v) => set({ width: v })} />
-        <NumberField label="Height" value={m.height} min={0.05} onCommit={(v) => set({ height: v })} />
+        <NumberField label={OVERHEAD_TYPES.has(m.typeId) ? 'Track height' : 'Height'} value={m.height} min={0.05} onCommit={(v) => set({ height: v })} />
+        {SLOPE_TYPES.has(m.typeId) && (
+          <NumberField label={m.typeId === 'overhead-conveyor-down' ? 'Drop height' : 'Rise height'} value={+slopeRise(m, layout.factory.ceilingHeight).toFixed(2)} min={0} onCommit={(v) => set({ rise: v })} />
+        )}
         <p className="text-right text-[11px] text-slate-500">Footprint {(m.length * m.width).toFixed(2)} m²</p>
       </Section>
 

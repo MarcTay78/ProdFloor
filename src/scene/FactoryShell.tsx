@@ -10,7 +10,8 @@ import { useUiStore } from '../store/uiStore';
 import { toThree, rotY } from './coords';
 import { mat } from './models/parts';
 
-const wallMat = new THREE.MeshStandardMaterial({ color: '#c9ccc8', roughness: 0.9 });
+// See-through so machines and workers inside stay visible from any camera angle.
+const wallMat = new THREE.MeshStandardMaterial({ color: '#c9ccc8', roughness: 0.9, transparent: true, opacity: 0.25, depthWrite: false });
 const wallMatFlat = new THREE.MeshBasicMaterial({ color: '#cbd5e1' });
 const pillarMat = new THREE.MeshStandardMaterial({ color: '#a3a39b', roughness: 0.85 });
 const doorFrameMat = new THREE.MeshStandardMaterial({ color: '#e2b324', roughness: 0.5 });
@@ -109,7 +110,7 @@ function OuterWalls({ f, flat }: { f: Factory; flat: boolean }) {
           const fy = alongX ? (side === 'south' ? -t / 2 : W + t / 2) : mid;
           const size: [number, number, number] = alongX ? [len, hgt, p.kind === 'glass' ? 0.02 : t] : [p.kind === 'glass' ? 0.02 : t, hgt, len];
           return (
-            <mesh key={`${side}${i}`} position={toThree(fx, fy, cy)} material={p.kind === 'glass' ? mat.glass : flat ? wallMatFlat : wallMat} castShadow={!flat} receiveShadow>
+            <mesh key={`${side}${i}`} position={toThree(fx, fy, cy)} material={p.kind === 'glass' ? mat.glass : flat ? wallMatFlat : wallMat}>
               <boxGeometry args={size} />
             </mesh>
           );
@@ -182,7 +183,7 @@ export function FactoryShell({ factory: f, flat }: { factory: Factory; flat: boo
         const r = wallRect(w);
         const h = flat ? 0.05 : w.height;
         return (
-          <mesh key={w.id} position={toThree(r.cx, r.cy, h / 2)} rotation-y={rotY(r.rotation)} material={flat ? wallMatFlat : wallMat} castShadow receiveShadow>
+          <mesh key={w.id} position={toThree(r.cx, r.cy, h / 2)} rotation-y={rotY(r.rotation)} material={flat ? wallMatFlat : wallMat}>
             <boxGeometry args={[r.length, h, r.width]} />
           </mesh>
         );

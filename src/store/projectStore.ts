@@ -3,7 +3,7 @@ import { temporal } from 'zundo';
 import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
 import { autoArrange } from '../domain/recommend';
-import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
+import { allWorkflowTemplates, createFinishingLayout, createWhitePartLayout } from '../domain/templates';
 import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Point2, ProcessArea, Project, Worker, WorkerRole, WorkflowStep } from '../domain/types';
 import { nextAreaColor } from '../domain/areas';
 import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
@@ -25,6 +25,8 @@ interface ProjectState {
   addLayout(name?: string): void;
   /** New layout (current building) pre-filled with the white-part production line. */
   addWhitePartLayout(): void;
+  /** New layout (current building) with the finishing department sample: overhead line loop, spray booths, drying room. */
+  addFinishingLayout(): void;
   duplicateLayout(id: string): void;
   /** Copy of the active layout rearranged by best-swap hill-climbing; added and made active only when it improves. */
   autoArrangeLayout(): { swaps: number; saved: number };
@@ -151,6 +153,11 @@ export const useProjectStore = create<ProjectState>()(
         addWhitePartLayout() {
           const p = get().project;
           const l = createWhitePartLayout(activeLayout(p).factory, p);
+          setProj((pp) => ({ ...pp, layouts: [...pp.layouts, l], activeLayoutId: l.id }));
+        },
+        addFinishingLayout() {
+          const p = get().project;
+          const l = createFinishingLayout(activeLayout(p).factory, p);
           setProj((pp) => ({ ...pp, layouts: [...pp.layouts, l], activeLayoutId: l.id }));
         },
         duplicateLayout(id) {

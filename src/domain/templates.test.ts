@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { CATALOGUE } from './catalogue';
 import { createFactory } from './projectFile';
-import { FULL_CHAIR_STEPS, WHITE_PART_STEPS, WHITE_PART_SUPPORT, WORKFLOW_TEMPLATES, allWorkflowTemplates, createWhitePartLayout } from './templates';
+import { FULL_CHAIR_STEPS, WHITE_PART_STEPS, WHITE_PART_SUPPORT, WORKFLOW_TEMPLATES, allWorkflowTemplates, createFinishingLayout, createWhitePartLayout } from './templates';
 import { validateLayout } from './validation';
 
 describe('white part template', () => {
@@ -58,5 +58,18 @@ describe('workflow templates', () => {
     expect(l.workflow).toHaveLength(WHITE_PART_STEPS.length);
     l.workflow.forEach((s, i) => expect(s.machineIds).toEqual([l.machines[i].id]));
     expect(l.flows.map((f) => f.label)).toEqual(WHITE_PART_STEPS.slice(1).map((_, i) => String(i + 1)));
+  });
+});
+
+describe('finishing sample', () => {
+  test('overhead loop, booths, drying room and sprayers with no layout errors', () => {
+    const l = createFinishingLayout(createFactory(), { customTypes: [] });
+    const types = l.machines.map((m) => m.typeId);
+    expect(types.filter((t) => t.startsWith('overhead-conveyor'))).toHaveLength(11);
+    expect(types).toEqual(expect.arrayContaining(['overhead-conveyor-up', 'overhead-conveyor-down']));
+    expect(types.filter((t) => t === 'hand-spray-booth')).toHaveLength(3);
+    expect(types).toContain('drying-room');
+    expect(l.workers.filter((w) => w.machineIds.length)).toHaveLength(4);
+    expect(validateLayout(l).filter((w) => w.severity === 'error')).toEqual([]);
   });
 });

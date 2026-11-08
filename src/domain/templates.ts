@@ -1,4 +1,4 @@
-import { CATALOGUE, createMachine, findType } from './catalogue';
+import { CATALOGUE, createMachine, findType, newId } from './catalogue';
 import { createLayout } from './projectFile';
 import type { Factory, Layout, Machine, Project, WorkflowTemplate } from './types';
 import { applyTemplate, deriveFlows } from './workflow';
@@ -126,5 +126,58 @@ export function createWhitePartLayout(factory: Factory, project: Pick<Project, '
   layout.machines = [...steps, ...support];
   layout.workflow = applyTemplate(WORKFLOW_TEMPLATES[0], steps);
   layout.flows = deriveFlows(layout.workflow);
+  return layout;
+}
+
+/**
+ * Finishing department sample: a clockwise overhead hanging line loop (4 straights + 4 bends) carrying parts past
+ * three hand spray booths on the north side and through a drying room on the south side (the south run rises to
+ * the roof over the east aisle and drops back down), with a load/unload
+ * packing bench inside the loop on the west. Sprayers stand on the far side of the track facing their booths.
+ * ponytail: fixed offsets sized for the default 40 × 20 m building; validation flags clashes in smaller ones.
+ */
+export function createFinishingLayout(factory: Factory, project: Pick<Project, 'customTypes'>, name = 'Finishing department'): Layout {
+  const layout = createLayout(name, structuredClone(factory));
+  const L = factory.length;
+  const place = (typeId: string, x: number, y: number, rotation = 0, over: Partial<Machine> = {}): Machine[] => {
+    const t = findType(project, typeId);
+    return t ? [{ ...createMachine(t, x, y), rotation, ...over }] : [];
+  };
+  const area = { id: newId(), name: 'Finishing', color: '#ea580c' };
+  const top = factory.ceilingHeight - 0.5; // high track level under the roof
+
+  // Loop track corners; bend centres sit on the corners, straights fill between them. Working-height track (3.2 m)
+  // except on the south run: it rises to the roof over the east aisle, then drops before the drying room.
+  const xW = 5, xE = L - 5, yN = 13, yS = 5, xMid = (xW + xE) / 2, yMid = (yN + yS) / 2;
+  const run = xE - xW - 2, rise = yN - yS - 2;
+  const slope = 3, high = 4, lowS = run - 2 * slope - high; // south run, heading west from xE - 1
+  const line = [
+    ...place('overhead-conveyor', xMid, yN, 0, { length: run }),
+    ...place('overhead-conveyor-bend', xE, yN, 0),
+    ...place('overhead-conveyor', xE, yMid, 270, { length: rise }),
+    ...place('overhead-conveyor-bend', xE, yS, 270),
+    ...place('overhead-conveyor-up', xE - 1 - slope / 2, yS, 180, { length: slope }),
+    ...place('overhead-conveyor', xE - 1 - slope - high / 2, yS, 180, { length: high, height: top }),
+    ...place('overhead-conveyor-down', xE - 1 - slope - high - slope / 2, yS, 180, { length: slope }),
+    ...place('overhead-conveyor', xW + 1 + lowS / 2, yS, 180, { length: lowS }),
+    ...place('overhead-conveyor-bend', xW, yS, 180),
+    ...place('overhead-conveyor', xW, yMid, 90, { length: rise }),
+    ...place('overhead-conveyor-bend', xW, yN, 90),
+  ];
+  line.forEach((m, i) => { m.name = `Overhead line ${i + 1}`; });
+
+  // Booths open to the south (front faces the track), parts pass just in front of the opening.
+  const boothXs = [xMid - 6, xMid, xMid + 6];
+  const booths = boothXs.flatMap((x, i) => place('hand-spray-booth', x, yN + 1.4, 180, { name: `Spray booth ${i + 1}` }));
+  const drying = place('drying-room', xW + 1 + lowS / 2, yS, 0, { height: 3.6 }); // tall enough for the hanging parts to pass inside
+  const packing = place('packing-station', xW + 3, yMid, 90, { name: 'Load / unload' });
+  const compressor = place('air-compressor', xE + 2, yN + 4);
+
+  layout.machines = [...line, ...booths, ...drying, ...packing, ...compressor].map((m) => ({ ...m, areaId: area.id }));
+  layout.areas = [area];
+  layout.workers = [
+    ...booths.map((b, i) => ({ id: newId(), name: `Sprayer ${i + 1}`, x: b.x, y: yN - 0.9, rotation: 180, path: [], machineIds: [b.id], role: 'operator' as const })),
+    ...packing.map((p) => ({ id: newId(), name: 'Loader', x: xW + 1.1, y: yMid, rotation: 90, path: [], machineIds: [p.id], role: 'operator' as const })),
+  ];
   return layout;
 }

@@ -1,3 +1,4 @@
+import { LINK_TYPES, OVERHEAD_TYPES, SLOPE_TYPES, slopeRise } from './catalogue';
 import {
   boxRect, clearanceRect, machineRect, operatorRect, polygonInsideBox, polygonsOverlap, rectCorners, segmentRect, type Rect,
 } from './geometry';
@@ -51,35 +52,41 @@ export function validateLayout(layout: Layout): LayoutWarning[] {
   });
   const walls = f.internalWalls.map((w) => rectCorners(wallRect(w)));
   const overlapsPair = (i: number, j: number) => polygonsOverlap(corners[i], corners[j]);
+  // A conveyor joining two machines is meant to touch them: skip every machine-to-machine check for that pair.
+  const isLink = machines.map((m) => LINK_TYPES.has(m.typeId));
+  const linked = (i: number, j: number) => isLink[i] || isLink[j];
 
   machines.forEach((m, i) => {
     const inside = polygonInsideBox(corners[i], 0, 0, f.length, f.width);
     if (!inside) {
       add({ severity: 'error', code: 'OUTSIDE_BUILDING', message: `${m.name} is outside or crossing the building walls`, machineIds: [m.id] });
     }
-    if (m.height > f.ceilingHeight) {
-      add({ severity: 'warning', code: 'TOO_TALL', message: `${m.name} (${m.height} m) is taller than the ceiling (${f.ceilingHeight} m)`, machineIds: [m.id] });
+    const top = SLOPE_TYPES.has(m.typeId) ? m.height + slopeRise(m, f.ceilingHeight) : m.height;
+    if (top > f.ceilingHeight) {
+      add({ severity: 'warning', code: 'TOO_TALL', message: `${m.name} (${+top.toFixed(2)} m) is taller than the ceiling (${f.ceilingHeight} m)`, machineIds: [m.id] });
     }
     for (let j = i + 1; j < machines.length; j++) {
+      if (linked(i, j)) continue;
       if (overlapsPair(i, j)) {
         add({ severity: 'error', code: 'MACHINE_OVERLAP', message: `${m.name} overlaps ${machines[j].name}`, machineIds: [m.id, machines[j].id] });
       } else if (ops[i] && ops[j] && polygonsOverlap(ops[i]!, ops[j]!)) {
         add({ severity: 'warning', code: 'OPERATOR_SHARED', message: `Operator areas of ${m.name} and ${machines[j].name} overlap`, machineIds: [m.id, machines[j].id] });
       }
     }
-    for (const o of obstacles) {
+    const overhead = OVERHEAD_TYPES.has(m.typeId);
+    for (const o of overhead ? [] : obstacles) {
       if (polygonsOverlap(corners[i], o.poly)) {
         add({ severity: 'error', code: 'OBSTACLE_OVERLAP', message: `${m.name} overlaps ${o.label}`, machineIds: [m.id], targetId: o.id });
       }
     }
-    for (const d of keepClear) {
+    for (const d of overhead ? [] : keepClear) {
       if (polygonsOverlap(corners[i], d.poly)) {
         add({ severity: 'warning', code: 'DOOR_BLOCKED', message: `${m.name} blocks the access area of ${d.name}`, machineIds: [m.id], targetId: d.id });
       }
     }
     const clear = rectCorners(clearanceRect(m));
     machines.forEach((other, j) => {
-      if (j !== i && polygonsOverlap(clear, corners[j]) && !overlapsPair(i, j)) {
+      if (j !== i && !linked(i, j) && polygonsOverlap(clear, corners[j]) && !overlapsPair(i, j)) {
         add({ severity: 'warning', code: 'CLEARANCE_INTRUSION', message: `${other.name} is inside the operating clearance of ${m.name}`, machineIds: [m.id, other.id] });
       }
     });
@@ -87,7 +94,7 @@ export function validateLayout(layout: Layout): LayoutWarning[] {
     const op = ops[i];
     if (op) {
       machines.forEach((other, j) => {
-        if (j !== i && !overlapsPair(i, j) && polygonsOverlap(op, corners[j])) {
+        if (j !== i && !linked(i, j) && !overlapsPair(i, j) && polygonsOverlap(op, corners[j])) {
           add({ severity: 'error', code: 'OPERATOR_BLOCKED', message: `Operator area of ${m.name} is blocked by ${other.name}`, machineIds: [m.id, other.id] });
         }
       });

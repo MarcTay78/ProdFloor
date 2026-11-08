@@ -195,7 +195,7 @@ export function FactoryCanvas() {
       <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-slate-900/70 px-2 py-1 text-[11px] text-slate-300">
         {pathEditing
           ? 'Click the floor to add path points · Esc or Done to finish'
-          : flat ? 'Plan view · drag to pan · scroll to zoom · north is up' : 'Left-drag rotate · right-drag pan · scroll zoom'}
+          : flat ? 'Plan view · drag to pan · scroll to zoom · Ctrl + drag moves an item · north is up' : 'Left-drag rotate · right-drag pan · scroll zoom · Ctrl + drag moves an item'}
       </div>
     </div>
   );

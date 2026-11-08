@@ -5,7 +5,7 @@ import * as THREE from 'three';
  * Model-local frame: length along x (-l/2..l/2), width along z (-w/2..w/2), height along y (0..h).
  * The machine front (operator side) faces -z.
  */
-export interface ModelProps { l: number; w: number; h: number; color?: string }
+export interface ModelProps { l: number; w: number; h: number; color?: string; /** Overhead slopes only: see Machine.rise. */ rise?: number; /** Overhead lines: see Machine.reverse. */ reverse?: boolean }
 export type V3 = [number, number, number];
 
 const std = (color: string, metalness = 0.2, roughness = 0.6, extra: THREE.MeshStandardMaterialParameters = {}) =>

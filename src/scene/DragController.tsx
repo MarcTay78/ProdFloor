@@ -35,7 +35,7 @@ export function SceneBridge() {
 }
 
 /**
- * Start moving or rotating a machine (or moving a worker, via commit) from a pointer-down. Updates a UI preview while dragging
+ * Start moving (Ctrl/Cmd + drag; a plain press only selects) or rotating a machine (or a worker, via commit) from a pointer-down. Updates a UI preview while dragging
  * and commits one store update (one undo step) on release.
  */
 export function useMachineDrag() {
@@ -52,6 +52,11 @@ export function useMachineDrag() {
     ) => {
       if (e.button !== 0) return;
       e.stopPropagation();
+      // Moving needs Ctrl (Cmd on Mac) so a plain click or camera drag never shifts an item by accident.
+      if (mode === 'move' && !(e.nativeEvent.ctrlKey || e.nativeEvent.metaKey)) {
+        useUiStore.getState().select(m.id);
+        return;
+      }
       const start = floorPoint(e.nativeEvent, camera, gl.domElement);
       if (!start) return;
       if (controls) controls.enabled = false;

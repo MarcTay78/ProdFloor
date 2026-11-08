@@ -135,3 +135,85 @@ export function CncTenoner({ l, w, h, color }: ModelProps) {
     </group>
   );
 }
+
+const mortWhite = new THREE.MeshStandardMaterial({ color: '#eceeef', metalness: 0.15, roughness: 0.5 });
+const clampOrange = new THREE.MeshStandardMaterial({ color: '#e8742a', metalness: 0.1, roughness: 0.6 });
+const windowBlue = new THREE.MeshStandardMaterial({ color: '#2d7fd6', metalness: 0.1, roughness: 0.15, transparent: true, opacity: 0.75 });
+
+/**
+ * CNC back leg mortiser: white base cabinet with two angled clamping fixtures (pneumatic clamps, orange pads)
+ * either side of a black centre chute, overhead gantry with a centre head behind a blue window and side
+ * spindle units, motors and cable chains on top, and a separate control console on castors at the -x end
+ * (seen from the front, -z, the console is on the right).
+ */
+export function CncBackLegMortiser({ l, w, h, color }: ModelProps) {
+  const body = usePaint(color, mortWhite);
+  const con = Math.min(0.6, l * 0.18); // console length along x
+  const x0 = -l / 2 + con + 0.1, x1 = l / 2;
+  const bl = x1 - x0, bx = (x0 + x1) / 2;
+  const baseH = 0.85, bw = w * 0.62, bz = w * 0.08;
+  const fixY = baseH + 0.12, fixZ = bz - bw * 0.15;
+  const gY = Math.min(h - 0.55, 1.9), gZ = bz + bw * 0.28;
+  return (
+    <>
+      {/* Base cabinet with feet, vent and label */}
+      <B p={[bx, baseH / 2, bz]} s={[bl, baseH, bw]} m={body} />
+      {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+        <B key={`${sx}${sz}`} p={[bx + sx * (bl / 2 - 0.1), 0.03, bz + sz * (bw / 2 - 0.08)]} s={[0.22, 0.06, 0.18]} m={body} />
+      )))}
+      <B p={[bx - bl * 0.12, baseH * 0.55, bz - bw / 2 - 0.005]} s={[0.12, 0.18, 0.01]} m={mat.yellow} />
+      {/* Two clamping fixtures, slightly angled, with clamps and orange pads */}
+      {[-1, 1].map((s) => {
+        const fx = bx + s * bl * 0.25;
+        return (
+          <group key={s} position={[fx, fixY, fixZ]} rotation={[0, s * -0.12, 0]}>
+            <B p={[0, 0, 0]} s={[bl * 0.42, 0.08, 0.35]} m={mat.steel} />
+            <B p={[0, 0.1, -0.12]} s={[bl * 0.42, 0.12, 0.05]} m={mat.steel} />
+            {Array.from({ length: 5 }, (_, i) => {
+              const x = -bl * 0.18 + (i * bl * 0.36) / 4;
+              return (
+                <group key={i}>
+                  <C p={[x, 0.2, 0.05]} rad={0.03} len={0.25} m={mat.steel} />
+                  <B p={[x, 0.08, 0.05]} s={[0.08, 0.04, 0.1]} m={clampOrange} />
+                </group>
+              );
+            })}
+          </group>
+        );
+      })}
+      {/* Black centre chute between the fixtures */}
+      <B p={[bx, fixY + 0.05, fixZ - 0.05]} s={[0.3, 0.25, 0.5]} m={mat.dark} r={[0.4, 0, 0]} />
+      {/* Gantry: side columns and beam behind the work area */}
+      {[-1, 1].map((s) => (
+        <B key={s} p={[bx + s * (bl / 2 - 0.12), (baseH + gY) / 2, gZ]} s={[0.22, gY - baseH, 0.3]} m={body} />
+      ))}
+      <B p={[bx, gY, gZ]} s={[bl, 0.3, 0.32]} m={body} />
+      {/* Side spindle units on the beam */}
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <B p={[bx + s * bl * 0.3, gY, gZ - 0.25]} s={[bl * 0.25, 0.28, 0.2]} m={body} />
+          <C p={[bx + s * bl * 0.3, gY - 0.3, gZ - 0.3]} rad={0.05} len={0.3} m={mat.steel} />
+        </group>
+      ))}
+      {/* Centre head housing with a blue window */}
+      <B p={[bx, gY + 0.05, gZ - 0.3]} s={[0.85, 0.6, 0.35]} m={body} />
+      <B p={[bx + 0.04, gY + 0.05, gZ - 0.48]} s={[0.6, 0.42, 0.01]} m={windowBlue} />
+      <C p={[bx, gY - 0.35, gZ - 0.35]} rad={0.04} len={0.2} m={mat.blade} />
+      {/* Motors and cable chains on top */}
+      <C p={[bx, gY + 0.5, gZ - 0.25]} rad={0.1} len={0.3} m={mat.dark} />
+      {[-0.3, 0.3].map((dx) => <C key={dx} p={[bx + dx, gY + 0.45, gZ - 0.2]} rad={0.06} len={0.3} m={mat.steel} />)}
+      {[-1, 1].map((s) => <B key={`ch${s}`} p={[bx + s * 0.55, gY + 0.4, gZ]} s={[0.08, 0.5, 0.08]} m={mat.rubber} />)}
+      {/* Control console on castors */}
+      <group position={[-l / 2 + con / 2, 0, -w / 2 + 0.35]}>
+        <B p={[0, 0.05, 0]} s={[con, 0.06, 0.45]} m={mortWhite} />
+        {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+          <C key={`w${sx}${sz}`} p={[sx * con * 0.4, 0.03, sz * 0.18]} rad={0.03} len={0.03} m={mat.rubber} axis="x" />
+        )))}
+        <B p={[0, 0.55, 0.05]} s={[0.18, 0.95, 0.18]} m={mortWhite} />
+        <B p={[0, 1.08, 0]} s={[con, 0.1, 0.35]} m={mortWhite} />
+        <B p={[0, 1.32, 0.08]} s={[con * 0.85, 0.4, 0.06]} m={mortWhite} r={[-0.3, 0, 0]} />
+        <B p={[0, 1.33, 0.04]} s={[con * 0.7, 0.3, 0.01]} m={mat.screen} r={[-0.3, 0, 0]} />
+      </group>
+    </>
+  );
+}

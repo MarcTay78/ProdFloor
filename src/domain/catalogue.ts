@@ -51,14 +51,18 @@ export const CATALOGUE: MachineType[] = [
   t('cnc-mortiser', 'CNC mortising machine', 'joinery', 2.0, 1.3, 2.0),
   t('tenoner', 'Tenon machine', 'joinery', 2.5, 1.6, 1.5),
   t('cnc-tenoner', 'CNC tenon machine', 'joinery', 2.2, 1.1, 1.7),
+  t('cnc-back-leg-mortiser', 'CNC back leg mortiser', 'joinery', 3.2, 2.2, 2.6),
   t('spindle-moulder', 'Spindle moulder', 'shaping', 1.4, 1.1, 1.2),
   t('router', 'Router', 'shaping', 1.3, 1.1, 1.8),
   t('cnc-router', 'CNC woodworking machine', 'shaping', 4.0, 2.2, 2.0),
+  t('cnc-table-profile', 'CNC table profile machine', 'shaping', 3.6, 2.4, 2.5),
   t('chair-apron-cnc', 'CNC auto chair apron machine', 'shaping', 4.2, 1.6, 1.8, { operatorAt: 'infeed' }),
   t('shaper', 'Wood shaping machine', 'shaping', 1.5, 1.2, 1.6),
+  t('rotary-copy-shaper', 'Copy shaper machine', 'shaping', 3.2, 2.0, 2.1),
   t('drill-press', 'Drilling machine', 'drilling', 0.8, 0.6, 1.8),
   t('multi-boring', 'Multi-boring machine', 'drilling', 2.5, 1.2, 1.5),
   t('multi-head-drill', 'Multi-head drilling machine', 'drilling', 2.5, 1.0, 1.9),
+  t('multi-head-table-drill', 'Multi-head table drilling machine', 'drilling', 3.4, 2.4, 2.3),
   t('belt-sander', 'Belt sanding machine', 'sanding', 3.0, 1.2, 1.4),
   t('wide-belt-sander', 'Wide belt sanding machine', 'sanding', 2.2, 2.0, 2.1),
   t('master-sander', 'Master sanding machine', 'sanding', 1.5, 1.6, 2.0, { operatorAt: 'infeed' }),
@@ -70,11 +74,36 @@ export const CATALOGUE: MachineType[] = [
   t('assembly-station', 'Assembly workstation', 'assembly', 2.0, 1.2, 0.9),
   t('glue-station', 'Glue application station', 'assembly', 1.5, 0.8, 1.0),
   t('spray-booth', 'Spray booth', 'finishing', 4.0, 3.0, 2.8, { clearance: 1.0 }),
+  t('hand-spray-booth', 'Hand spray booth', 'finishing', 3.0, 1.6, 2.7, { clearance: 1.0 }),
+  t('disc-spray-room', 'Electrostatic disc spray room', 'finishing', 4.0, 4.0, 5.5, { clearance: 1.0 }),
   t('drying-room', 'Drying room', 'finishing', 6.0, 4.0, 2.8, { clearance: 1.0 }),
   t('packing-station', 'Packing station', 'finishing', 2.5, 1.5, 0.9),
   t('dust-collector', 'Dust collector', 'utilities', 2.5, 1.5, 4.0, { operator: false }),
   t('air-compressor', 'Air compressor', 'utilities', 1.4, 0.8, 1.2, { operator: false }),
+  t('roller-conveyor', 'Roller conveyor', 'utilities', 1.5, 1.1, 0.85, { operator: false, clearance: 0 }),
+  // Overhead line: height = track height (rods run up to the ceiling); parts hang 1.2 m below it.
+  t('overhead-conveyor', 'Overhead hanging conveyor', 'utilities', 4.0, 0.6, 3.2, { operator: false, clearance: 0 }),
+  // 90° bend: enters mid left edge, leaves mid back edge; rotate for other turns.
+  t('overhead-conveyor-bend', 'Overhead conveyor bend (90°)', 'utilities', 2.0, 2.0, 3.2, { operator: false, clearance: 0 }),
+  // Slopes between track height and the top level 0.5 m under the ceiling.
+  t('overhead-conveyor-down', 'Overhead conveyor drop (roof → down)', 'utilities', 3.0, 0.6, 3.2, { operator: false, clearance: 0 }),
+  t('overhead-conveyor-up', 'Overhead conveyor rise (up → roof)', 'utilities', 3.0, 0.6, 3.2, { operator: false, clearance: 0 }),
 ];
+
+/** Overhead slope pieces; their drop / rise height is Machine.rise. */
+export const SLOPE_TYPES = new Set(['overhead-conveyor-down', 'overhead-conveyor-up']);
+
+/** Default slope height when Machine.rise is unset: from the track height up to 0.5 m under the ceiling. */
+export const slopeRise = (m: Pick<Machine, 'height' | 'rise'>, ceiling: number) => m.rise ?? Math.max(0, ceiling - 0.5 - m.height);
+
+/** Ceiling-mounted types: they pass over machines, pillars, zones and door access areas without a warning. */
+export const OVERHEAD_TYPES = new Set(['overhead-conveyor', 'overhead-conveyor-bend', 'overhead-conveyor-down', 'overhead-conveyor-up']);
+
+/**
+ * Types that link machines (material passes over them from one machine to the next): they may touch or overlap
+ * other machines and their clearance or operator areas without a warning.
+ */
+export const LINK_TYPES = new Set(['roller-conveyor', ...OVERHEAD_TYPES]);
 
 export function allTypes(project: Pick<Project, 'customTypes'>): MachineType[] {
   return [...CATALOGUE, ...project.customTypes];
