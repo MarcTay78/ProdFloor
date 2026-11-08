@@ -28,6 +28,13 @@ function t(
   };
 }
 
+/** Wide-belt "master" sander: parts are fed in over the infeed table at the input end, so the operator stands there (left = input side). */
+function masterSander(): MachineType {
+  const type = t('master-sander', 'Master sanding machine', 'sanding', 1.5, 1.6, 2.0);
+  type.defaults.operatorArea = { side: 'left', depth: 0.9, width: 1.6 };
+  return type;
+}
+
 export const CATALOGUE: MachineType[] = [
   t('raw-timber-rack', 'Raw timber storage rack', 'storage', 6.0, 1.2, 3.0),
   t('wip-rack', 'WIP storage rack', 'storage', 2.5, 1.0, 2.0),
@@ -50,6 +57,7 @@ export const CATALOGUE: MachineType[] = [
   t('multi-boring', 'Multi-boring machine', 'drilling', 2.5, 1.2, 1.5),
   t('belt-sander', 'Belt sanding machine', 'sanding', 3.0, 1.2, 1.4),
   t('wide-belt-sander', 'Wide belt sanding machine', 'sanding', 2.2, 2.0, 2.1),
+  masterSander(),
   t('disc-sander', 'Disc sanding machine', 'sanding', 1.0, 0.6, 1.2),
   t('profile-sander', 'Profile sanding machine', 'sanding', 2.5, 1.3, 1.6),
   t('inspection-table', 'Component inspection table', 'assembly', 2.0, 1.0, 0.9),

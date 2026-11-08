@@ -1,4 +1,46 @@
+import * as THREE from 'three';
 import { B, C, Legs, Panel, mat, usePaint, type ModelProps } from './parts';
+
+const panelGrey = new THREE.MeshStandardMaterial({ color: '#bfc3bd', metalness: 0.2, roughness: 0.55 });
+const tableBlue = new THREE.MeshStandardMaterial({ color: '#3a9ad0', metalness: 0.25, roughness: 0.45 });
+
+/**
+ * Wide-belt "master" sander: blue base, grey side columns and electrical cabinet, orange band over the feed
+ * opening, blue infeed table sticking out at the input end (-x), control strip and e-stop on the operator side.
+ */
+export function MasterSander({ l, w, h, color }: ModelProps) {
+  const base = usePaint(color, mat.blue);
+  const tableL = l * 0.22;
+  const x0 = -l / 2 + tableL, x1 = l / 2 - l * 0.04;
+  const bd = x1 - x0, bx = (x0 + x1) / 2;
+  const feedY = Math.min(h * 0.45, 0.95);
+  const bandH = 0.14;
+  const topY = feedY + 0.08 + bandH;
+  const cabTop = h * 0.92;
+  const cabH = cabTop - topY;
+  return (
+    <>
+      <B p={[bx, feedY / 2, 0]} s={[bd, feedY, w]} m={base} />
+      {[-1, 1].map((s) => <B key={s} p={[bx, (feedY + cabTop) / 2, s * w * 0.45]} s={[bd, cabTop - feedY, w * 0.1]} m={panelGrey} />)}
+      {[-1, 1].map((s) => [0.2, 0.3, 0.4].map((f) => (
+        <B key={`${s}${f}`} p={[bx + bd * 0.25, feedY + (cabTop - feedY) * f, s * w * 0.501]} s={[bd * 0.3, 0.03, 0.005]} m={mat.dark} />
+      )))}
+      <B p={[bx, feedY + 0.04, 0]} s={[bd * 1.01, 0.08, w * 0.8]} m={mat.rubber} />
+      <B p={[bx, feedY + 0.08 + bandH / 2, 0]} s={[bd * 1.02, bandH, w * 0.8]} m={mat.orange} />
+      <B p={[bx, topY + cabH / 2, 0]} s={[bd, cabH, w * 0.8]} m={panelGrey} />
+      <B p={[x0 - 0.006, topY + cabH / 2, 0]} s={[0.012, cabH * 0.85, 0.015]} m={mat.dark} />
+      <B p={[x0 - 0.02, topY + cabH / 2 - bandH / 2, -w * 0.45]} s={[0.04, cabH + bandH, w * 0.09]} m={mat.dark} />
+      {[0.15, 0.35, 0.55].map((f) => <C key={f} p={[x0 - 0.045, topY + cabH * f, -w * 0.45]} rad={0.018} len={0.02} m={mat.grey} axis="x" />)}
+      <C p={[x0 - 0.045, feedY + 0.3, -w * 0.45]} rad={0.035} len={0.03} m={mat.red} axis="x" />
+      <B p={[-l / 2 + tableL / 2, feedY, 0]} s={[tableL, 0.14, w * 0.72]} m={tableBlue} />
+      <B p={[-l / 2 + tableL / 2, feedY + 0.075, 0]} s={[tableL * 0.9, 0.01, w * 0.66]} m={mat.rubber} />
+      <C p={[bx, cabTop + 0.04, w * 0.1]} rad={0.12} len={0.08} m={base} />
+      {[-1, 1].flatMap((sx) => [-1, 1].map((sz) => (
+        <B key={`${sx}${sz}`} p={[bx + sx * bd * 0.45, 0.02, sz * w * 0.44]} s={[0.08, 0.04, 0.08]} m={mat.wood} />
+      )))}
+    </>
+  );
+}
 
 export function BeltSander({ l, w, h, color }: ModelProps) {
   const body = usePaint(color, mat.green);
