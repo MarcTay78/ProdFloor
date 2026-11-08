@@ -167,3 +167,43 @@ export function BrushSander({ l, w, h, color }: ModelProps) {
     </>
   );
 }
+
+const teal = new THREE.MeshStandardMaterial({ color: '#1f8a6e', metalness: 0.2, roughness: 0.45 });
+
+/**
+ * Roller (vertical belt) sander: white cabinet, green table cantilevered to the operator's left (+x after mirroring), vertical abrasive belt
+ * round two upright rollers with a green housing behind, red switch and handwheel on the front (-z).
+ */
+export function RollerSander({ l, w, h, color }: ModelProps) {
+  const body = usePaint(color, mat.white);
+  const cabW = l * 0.6, cabX = l / 2 - cabW / 2;
+  const cabH = h * 0.68;
+  const tableY = h * 0.8;
+  const r = 0.07;
+  const rx0 = cabX - cabW * 0.2, rx1 = cabX + cabW * 0.25, rz = w * 0.02;
+  const beltH = h * 0.97 - tableY;
+  const beltY = tableY + beltH / 2;
+  // Built with the table toward -x, then mirrored so it sits on the operator's left as in the reference photo.
+  return (
+    <group scale={[-1, 1, 1]}>
+      <B p={[cabX, cabH / 2, 0]} s={[cabW, cabH, w * 0.8]} m={body} />
+      <B p={[cabX, 0.03, 0]} s={[cabW * 1.01, 0.06, w * 0.81]} m={mat.grey} />
+      <B p={[cabX + cabW * 0.3, cabH * 0.8, -w * 0.4 - 0.01]} s={[0.12, 0.12, 0.02]} m={mat.dark} />
+      <B p={[cabX + cabW * 0.3, cabH * 0.8, -w * 0.4 - 0.025]} s={[0.06, 0.08, 0.02]} m={mat.red} />
+      {[-0.25, 0.1].map((f) => <C key={f} p={[cabX + cabW * f, (cabH + tableY) / 2, -w * 0.1]} rad={0.06} len={tableY - cabH} m={mat.cast} />)}
+      <B p={[cabX, cabH + 0.04, 0]} s={[cabW * 0.9, 0.08, w * 0.6]} m={mat.cast} />
+      <B p={[(-l / 2 + rx1) / 2, tableY, -w * 0.12]} s={[rx1 + l / 2, 0.04, w * 0.55]} m={teal} />
+      {[rx0, rx1].map((x) => (
+        <group key={x}>
+          <C p={[x, beltY, rz]} rad={r + 0.006} len={beltH} m={abrasive} />
+          <C p={[x, beltY + beltH / 2 + 0.01, rz]} rad={r * 0.6} len={0.02} m={mat.steel} />
+        </group>
+      ))}
+      {[-1, 1].map((s) => <B key={s} p={[(rx0 + rx1) / 2, beltY, rz + s * (r + 0.003)]} s={[rx1 - rx0, beltH, 0.006]} m={abrasive} />)}
+      <B p={[(rx0 + rx1) / 2, beltY + 0.02, rz + r + 0.06]} s={[rx1 - rx0 + 2 * r + 0.06, beltH + 0.04, 0.06]} m={teal} />
+      <B p={[(rx0 + rx1) / 2, beltY + beltH / 2 + 0.03, rz + 0.03]} s={[rx1 - rx0 + 2 * r + 0.06, 0.03, 2 * r + 0.12]} m={teal} />
+      <C p={[cabX + cabW * 0.3, tableY - 0.1, -w * 0.4]} rad={0.08} len={0.02} m={mat.steel} axis="z" />
+      <C p={[cabX + cabW * 0.3, tableY - 0.1, -w * 0.33]} rad={0.015} len={0.14} m={mat.steel} axis="z" />
+    </group>
+  );
+}
