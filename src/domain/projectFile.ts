@@ -20,7 +20,7 @@ export function createFactory(): Factory {
 }
 
 export function createLayout(name = 'Layout 1', factory: Factory = createFactory()): Layout {
-  return { id: newId(), name, factory, machines: [], workflow: [], flows: [], areas: [] };
+  return { id: newId(), name, factory, machines: [], workflow: [], flows: [], areas: [], workers: [] };
 }
 
 export function createProject(name: string): Project {
@@ -64,6 +64,18 @@ export function migrateProject(project: Project): { project: Project; notices: s
       if (m?.areaId !== undefined && !areaIds.has(m.areaId)) { delete m.areaId; unassigned++; }
     }
     if (unassigned) notices.push(`Layout "${l.name}": ${unassigned} machine(s) referred to a missing process area and were unassigned`);
+
+    if (!Array.isArray(l.workers)) l.workers = [];
+    const machineIds = new Set(l.machines.map((m: any) => m?.id));
+    let staleCrew = 0;
+    for (const w of l.workers) {
+      if (!w) continue;
+      if (!Array.isArray(w.machineIds)) { w.machineIds = []; continue; }
+      const kept = w.machineIds.filter((id: string) => machineIds.has(id));
+      staleCrew += w.machineIds.length - kept.length;
+      w.machineIds = kept;
+    }
+    if (staleCrew) notices.push(`Layout "${l.name}": removed ${staleCrew} unknown machine reference(s) from workers`);
 
     if (!Array.isArray(l.workflow)) {
       const r = workflowFromFlows(l.machines, l.flows);
@@ -125,6 +137,13 @@ function validateProject(p: any): string[] {
       if (typeof a?.id !== 'string' || typeof a?.name !== 'string' || typeof a?.color !== 'string') errors.push(`${aat} needs id, name and color`);
       else if (areaIds.has(a.id)) errors.push(`${aat}: duplicate area id ${a.id}`);
       else areaIds.add(a.id);
+    });
+    const workerIds = new Set<string>();
+    (l.workers as any[]).forEach((w, wi) => {
+      const wat = `${at}.workers[${wi}]`;
+      if (typeof w?.id !== 'string' || typeof w?.name !== 'string' || !num(w?.x) || !num(w?.y)) errors.push(`${wat} needs id, name, x and y`);
+      else if (workerIds.has(w.id)) errors.push(`${wat}: duplicate worker id ${w.id}`);
+      else workerIds.add(w.id);
     });
   });
   return errors;

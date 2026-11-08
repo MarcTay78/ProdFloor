@@ -9,7 +9,7 @@ import { deriveFlows } from './workflow';
 const saw = (x: number, y: number): Machine => createMachine(CATALOGUE.find((t) => t.id === 'table-saw')!, x, y);
 const layoutOf = (machines: Machine[], groups: Machine[][]): Layout => {
   const workflow: WorkflowStep[] = groups.map((g, i) => ({ id: `s${i}`, name: `S${i}`, machineIds: g.map((m) => m.id) }));
-  return { id: 'L', name: 'L', factory: createFactory(), machines, workflow, flows: deriveFlows(workflow), areas: [] };
+  return { id: 'L', name: 'L', factory: createFactory(), machines, workflow, flows: deriveFlows(workflow), areas: [], workers: [] };
 };
 
 describe('partRoute', () => {
