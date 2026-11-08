@@ -2,7 +2,7 @@ import { Html, Line } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { walkLoop, walkPose } from '../domain/simulation';
+import { WALK_SPEED, walkLoop, walkPose } from '../domain/simulation';
 import type { Machine, Worker } from '../domain/types';
 import { useProjectStore } from '../store/projectStore';
 import { useUiStore } from '../store/uiStore';
@@ -28,6 +28,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
   const speed = useUiStore((s) => s.animSpeed);
   const body = useRef<THREE.Group>(null);
   const clock = useRef(0);
+  const limbs = useRef<Limbs>({ legs: [], arm: null });
   const legs = useMemo(() => walkLoop(w), [w.x, w.y, w.path]); // eslint-disable-line react-hooks/exhaustive-deps
   const color = selected ? '#38bdf8' : '#f59e0b';
   const assigned = machines.filter((m) => w.machineIds.includes(m.id));
@@ -40,7 +41,12 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
     const pose = animating && legs.length ? walkPose(legs, (clock.current += Math.min(dt, 0.1) * speed)) : null;
     if (!pose) clock.current = 0;
     const p = pose ?? w;
-    g.position.set(...toThree(p.x, p.y, pose && !flat ? Math.abs(Math.sin(clock.current * 6)) * 0.04 : 0));
+    // Walk cycle: one leg swing per STEP metres walked; free arm swings opposite; small bob on each step.
+    const phase = pose ? (clock.current * WALK_SPEED * Math.PI) / STEP : 0;
+    const swing = Math.sin(phase) * 0.55;
+    limbs.current.legs.forEach((leg, i) => { leg.rotation.x = i ? -swing : swing; });
+    if (limbs.current.arm) limbs.current.arm.rotation.x = swing * 0.8;
+    g.position.set(...toThree(p.x, p.y, pose && !flat ? Math.abs(Math.sin(phase)) * 0.025 : 0));
     g.rotation.y = rotY(p.rotation);
   });
 
@@ -62,7 +68,7 @@ export function WorkerFigure({ worker: w, machines, selected, flat, showLabel }:
             </mesh>
           </>
         ) : (
-          <group scale={1.1}><CuteWorker /></group>
+          <group scale={1.1}><CuteWorker limbs={limbs} /></group>
         )}
         {selected && (
           <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={(e) => startDrag(w, 'rotate', e, commit)}>
@@ -110,22 +116,28 @@ function Mat({ color, rough = 0.55 }: { color: string; rough?: number }) {
   return <meshStandardMaterial color={color} roughness={rough} />;
 }
 
+/** Hip height (model units) where the legs pivot. */
+const HIP = 0.36;
+/** Floor distance covered per step (m, at the 1.1 model scale): sets leg swing speed so feet don't slide. */
+const STEP = 0.42;
+interface Limbs { legs: THREE.Group[]; arm: THREE.Group | null }
+
 /** Chibi worker (blue hard hat, coverall, tool belt, pliers), ~1.52 m tall at scale 1, facing south (+z). */
-function CuteWorker() {
+function CuteWorker({ limbs }: { limbs: React.MutableRefObject<Limbs> }) {
   return (
     <group>
-      {/* Boots, legs */}
-      {[-0.08, 0.08].map((x) => (
-        <group key={x} position={[x, 0, 0]}>
-          <mesh position={[0, 0.05, 0.02]} castShadow>
+      {/* Boots, legs: each pivots at the hip (y = HIP) so it can swing while walking */}
+      {[-0.08, 0.08].map((x, i) => (
+        <group key={x} position={[x, HIP, 0]} ref={(g) => { if (g) limbs.current.legs[i] = g; }}>
+          <mesh position={[0, 0.05 - HIP, 0.02]} castShadow>
             <boxGeometry args={[0.12, 0.1, 0.18]} />
             <Mat color={BOOT} />
           </mesh>
-          <mesh position={[0, 0.12, 0]}>
+          <mesh position={[0, 0.12 - HIP, 0]}>
             <cylinderGeometry args={[0.068, 0.068, 0.05, 16]} />
             <Mat color={TAN} />
           </mesh>
-          <mesh position={[0, 0.25, 0]} castShadow>
+          <mesh position={[0, 0.25 - HIP, 0]} castShadow>
             <cylinderGeometry args={[0.06, 0.065, 0.22, 16]} />
             <Mat color={SUIT} />
           </mesh>
@@ -188,7 +200,7 @@ function CuteWorker() {
         </group>
       </group>
       {/* Other arm down by the side */}
-      <group position={[0.17, 0.74, 0]} rotation={[0, 0, 0.25]}>
+      <group position={[0.17, 0.74, 0]} rotation={[0, 0, 0.25]} ref={(g) => { limbs.current.arm = g; }}>
         <mesh position={[0, -0.12, 0]} castShadow>
           <capsuleGeometry args={[0.05, 0.16, 6, 12]} />
           <Mat color={SUIT} />
