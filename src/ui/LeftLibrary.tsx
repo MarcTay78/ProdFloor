@@ -10,9 +10,8 @@ export function LeftLibrary() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
   const addWhitePartLayout = useProjectStore((s) => s.addWhitePartLayout);
-  const { select, openDialog } = useUiStore();
+  const { select, openDialog, openCategories, toggleCategory } = useUiStore();
   const [query, setQuery] = useState('');
-  const [closed, setClosed] = useState<Record<string, boolean>>({});
 
   const layout = activeLayout(project);
   const counts = useMemo(() => {
@@ -39,14 +38,15 @@ export function LeftLibrary() {
         {CATEGORIES.map((cat) => {
           const list = types.filter((t) => t.category === cat);
           if (!list.length) return null;
-          const isClosed = closed[cat] && !q;
+          const isClosed = !openCategories[cat] && !q; // searching shows every match
           return (
             <div key={cat} className="mb-2">
               <button
                 className="flex w-full items-center justify-between py-1 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-200"
-                onClick={() => setClosed((c) => ({ ...c, [cat]: !c[cat] }))}
+                onClick={() => toggleCategory(cat)}
+                aria-expanded={!isClosed}
               >
-                {CATEGORY_LABELS[cat]}
+                <span>{CATEGORY_LABELS[cat]} <span className="normal-case text-slate-500">({list.length})</span></span>
                 <span>{isClosed ? '▸' : '▾'}</span>
               </button>
               {!isClosed && list.map((t) => (

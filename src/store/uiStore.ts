@@ -34,6 +34,9 @@ interface UiState {
   setAnimMode(m: 'single' | 'stream'): void;
   leftTab: LeftTab;
   setLeftTab(t: LeftTab): void;
+  /** Library categories the user has expanded (all start collapsed). */
+  openCategories: Record<string, boolean>;
+  toggleCategory(cat: string): void;
   toggle(key: ToggleKey): void;
   snap: number;
   setSnap(v: number): void;
@@ -78,6 +81,8 @@ export const useUiStore = create<UiState>()((set) => ({
   setAnimMode: (animMode) => set({ animMode }),
   leftTab: 'library',
   setLeftTab: (leftTab) => set({ leftTab }),
+  openCategories: {},
+  toggleCategory: (cat) => set((s) => ({ openCategories: { ...s.openCategories, [cat]: !s.openCategories[cat] } })),
   toggle: (key) => set((s) => ({ [key]: !s[key] }) as Partial<UiState>),
   snap: 0.1,
   setSnap: (snap) => set({ snap }),
