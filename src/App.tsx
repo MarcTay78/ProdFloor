@@ -5,6 +5,7 @@ import { lastProjectId, loadProject, saveNow, startAutosave } from './store/pers
 import { openProject } from './store/projectStore';
 import { useUiStore } from './store/uiStore';
 import { BottomStatus } from './ui/BottomStatus';
+import { CompareDialog } from './ui/CompareDialog';
 import { CustomTypeDialog } from './ui/CustomTypeDialog';
 import { FactoryConfigDialog } from './ui/FactoryConfigDialog';
 import { LeftPanel } from './ui/LeftPanel';
@@ -73,6 +74,7 @@ function Planner() {
       {dialog === 'factory' && <FactoryConfigDialog />}
       {dialog === 'projects' && <ProjectManagerDialog />}
       {dialog === 'customType' && <CustomTypeDialog />}
+      {dialog === 'compare' && <CompareDialog />}
     </div>
   );
 }

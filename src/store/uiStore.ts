@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'side';
 type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows';
-export type DialogName = 'factory' | 'projects' | 'customType';
+export type DialogName = 'factory' | 'projects' | 'customType' | 'compare';
 export type LeftTab = 'library' | 'workflow' | 'suggestions';
 
 interface UiState {
