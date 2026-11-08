@@ -232,11 +232,21 @@ function Panel({ children }: { children: React.ReactNode }) {
   return <div className="h-full overflow-y-auto border-l border-slate-700 bg-slate-900 p-3 text-slate-200">{children}</div>;
 }
 
+/** Collapsible group; open state is kept per title in the UI store, so it survives selecting another machine. */
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const open = useUiStore((s) => !!s.openSections[title]);
+  const toggle = useUiStore((s) => s.toggleSection);
   return (
-    <div className="mt-4 space-y-1.5">
-      <h4 className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{title}</h4>
-      {children}
+    <div className="mt-3 space-y-1.5 border-t border-slate-800 pt-2">
+      <button
+        className="flex w-full items-center justify-between text-left text-[11px] font-medium uppercase tracking-wide text-slate-400 hover:text-slate-200"
+        onClick={() => toggle(title)}
+        aria-expanded={open}
+      >
+        {title}
+        <span>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && children}
     </div>
   );
 }
