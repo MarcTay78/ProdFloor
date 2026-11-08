@@ -4,7 +4,8 @@ import { createMachine, findType, newId } from '../domain/catalogue';
 import { createLayout, createProject } from '../domain/projectFile';
 import { autoArrange } from '../domain/recommend';
 import { allWorkflowTemplates, createWhitePartLayout } from '../domain/templates';
-import type { Factory, FactoryItemKind, Layout, Machine, MachineType, Project, WorkflowStep } from '../domain/types';
+import type { Factory, FactoryItemKind, Layout, Machine, MachineType, ProcessArea, Project, WorkflowStep } from '../domain/types';
+import { nextAreaColor } from '../domain/areas';
 import { applyTemplate, deriveFlows, removeMachineFromWorkflow } from '../domain/workflow';
 
 export const activeLayout = (p: Project): Layout =>
@@ -39,6 +40,11 @@ interface ProjectState {
   assignToStep(stepId: string, machineId: string): void;
   applyWorkflowTemplate(templateId: string): void;
   saveWorkflowTemplate(name: string): void;
+  /** New process area in the active layout (next palette colour); returns its id. Assign machines with updateMachine(id, { areaId }). */
+  addArea(name: string): string;
+  updateArea(id: string, patch: Partial<Pick<ProcessArea, 'name' | 'color'>>): void;
+  /** Removes the area and unassigns its machines (one undo step). */
+  removeArea(id: string): void;
 }
 
 const touch = (p: Project): Project => ({ ...p, updatedAt: new Date().toISOString() });
@@ -72,6 +78,18 @@ export const useProjectStore = create<ProjectState>()(
           return m.id;
         },
         updateMachine: (id, patch) => setMachines((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m))),
+        addArea(name) {
+          const id = newId();
+          setLayout((l) => ({ ...l, areas: [...l.areas, { id, name, color: nextAreaColor(l.areas) }] }));
+          return id;
+        },
+        updateArea: (id, patch) => setLayout((l) => ({ ...l, areas: l.areas.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+        removeArea: (id) =>
+          setLayout((l) => ({
+            ...l,
+            areas: l.areas.filter((a) => a.id !== id),
+            machines: l.machines.map((m) => (m.areaId === id ? { ...m, areaId: undefined } : m)),
+          })),
         deleteMachines: (ids) =>
           setLayout((l) => {
             const workflow = removeMachineFromWorkflow(l.workflow, ids);

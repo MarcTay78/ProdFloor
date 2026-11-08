@@ -183,3 +183,25 @@ describe('autoArrangeLayout', () => {
     expect(s().project.layouts).toHaveLength(1);
   });
 });
+
+describe('process areas', () => {
+  test('add, assign, rename, remove (unassigns machines; one undo restores both)', () => {
+    const m = s().addMachine('bandsaw', 3, 4)!;
+    const a = s().addArea('Cutting');
+    s().updateMachine(m, { areaId: a });
+    s().updateArea(a, { name: 'Saws', color: '#123456' });
+    expect(layout().areas).toEqual([{ id: a, name: 'Saws', color: '#123456' }]);
+    expect(layout().machines[0].areaId).toBe(a);
+    s().removeArea(a);
+    expect(layout().areas).toEqual([]);
+    expect(layout().machines[0].areaId).toBeUndefined();
+    undo();
+    expect(layout().areas).toHaveLength(1);
+    expect(layout().machines[0].areaId).toBe(a);
+  });
+  test('areas use the palette in order', () => {
+    s().addArea('A');
+    s().addArea('B');
+    expect(layout().areas[0].color).not.toBe(layout().areas[1].color);
+  });
+});

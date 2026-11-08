@@ -58,6 +58,7 @@ Projects are saved automatically in **each user's own browser** (IndexedDB). Col
 - Drag a machine to move it (snap set in toolbar; hold Alt for free movement). Drag the blue ring to rotate (15° steps; Shift for 1°).
 - R rotate 90°, Ctrl+D duplicate, Delete remove, Ctrl+Z / Ctrl+Y undo / redo, Esc deselect.
 - Click a warning in the bottom panel to select and centre that machine.
+- **Process areas**: with nothing selected, the inspector lists the layout's areas (e.g. Cutting, Sanding): add, rename, recolour, delete. Select a machine and pick its **Process area** (or "+ New area…"). Each area is drawn as a tinted floor patch with its name and machine count around its machines, and follows them when they move. Toggle with **Areas**.
 - The small arrows on the edges of the 3D view hide or show the left panel, the inspector and the status bar. **Full view** (toolbar, or F) hides all three and switches the browser to full screen; press it again, F, or Esc to return.
 
 ## White-part production template

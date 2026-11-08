@@ -12,7 +12,7 @@ const saw = (x: number, y: number) => make('table-saw', x, y);
 const factory = (over: Partial<Factory> = {}): Factory => ({ ...createFactory(), doors: [], ...over });
 const layoutOf = (machines: Machine[], groups: Machine[][], f = factory()): Layout => {
   const workflow: WorkflowStep[] = groups.map((g, i) => ({ id: `s${i}`, name: `S${i}`, machineIds: g.map((m) => m.id) }));
-  return { id: 'L', name: 'L', factory: f, machines, workflow, flows: deriveFlows(workflow) };
+  return { id: 'L', name: 'L', factory: f, machines, workflow, flows: deriveFlows(workflow), areas: [] };
 };
 const P = { customTypes: [] };
 const codes = (l: Layout) => recommend(l, P).map((s) => s.code);

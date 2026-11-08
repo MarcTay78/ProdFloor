@@ -20,7 +20,7 @@ export function createFactory(): Factory {
 }
 
 export function createLayout(name = 'Layout 1', factory: Factory = createFactory()): Layout {
-  return { id: newId(), name, factory, machines: [], workflow: [], flows: [] };
+  return { id: newId(), name, factory, machines: [], workflow: [], flows: [], areas: [] };
 }
 
 export function createProject(name: string): Project {
@@ -56,6 +56,14 @@ export function migrateProject(project: Project): { project: Project; notices: s
     l.machines ??= [];
     const f = l.factory ?? {};
     for (const k of ['internalWalls', 'doors', 'windows', 'pillars', 'restrictedZones']) f[k] ??= [];
+
+    if (!Array.isArray(l.areas)) l.areas = [];
+    const areaIds = new Set(l.areas.map((a: any) => a?.id));
+    let unassigned = 0;
+    for (const m of l.machines) {
+      if (m?.areaId !== undefined && !areaIds.has(m.areaId)) { delete m.areaId; unassigned++; }
+    }
+    if (unassigned) notices.push(`Layout "${l.name}": ${unassigned} machine(s) referred to a missing process area and were unassigned`);
 
     if (!Array.isArray(l.workflow)) {
       const r = workflowFromFlows(l.machines, l.flows);
@@ -110,6 +118,13 @@ function validateProject(p: any): string[] {
       if (typeof s?.id !== 'string' || typeof s?.name !== 'string' || !Array.isArray(s?.machineIds)) errors.push(`${sat} needs id, name and machineIds`);
       else if (stepIds.has(s.id)) errors.push(`${sat}: duplicate step id ${s.id}`);
       else stepIds.add(s.id);
+    });
+    const areaIds = new Set<string>();
+    (l.areas as any[]).forEach((a, ai) => {
+      const aat = `${at}.areas[${ai}]`;
+      if (typeof a?.id !== 'string' || typeof a?.name !== 'string' || typeof a?.color !== 'string') errors.push(`${aat} needs id, name and color`);
+      else if (areaIds.has(a.id)) errors.push(`${aat}: duplicate area id ${a.id}`);
+      else areaIds.add(a.id);
     });
   });
   return errors;

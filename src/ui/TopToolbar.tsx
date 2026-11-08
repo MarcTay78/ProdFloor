@@ -69,6 +69,7 @@ export function TopToolbar() {
       <button className={ui.showLabels ? btnOn : btn} onClick={() => ui.toggle('showLabels')}>Labels</button>
       <button className={ui.showGrid ? btnOn : btn} onClick={() => ui.toggle('showGrid')}>Grid</button>
       <button className={ui.showFlows ? btnOn : btn} onClick={() => ui.toggle('showFlows')}>Flows</button>
+      <button className={ui.showAreas ? btnOn : btn} onClick={() => ui.toggle('showAreas')} title="Show process areas on the floor">Areas</button>
       <button
         className={ui.animating ? btnOn : btn}
         onClick={() => ui.toggle('animating')}

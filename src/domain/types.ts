@@ -27,7 +27,12 @@ export interface Machine {
   outputPoint: Point2;
   modelOverride?: string;
   color?: string;
+  /** Process area the user assigned this machine to (Layout.areas). */
+  areaId?: string;
 }
+
+/** User-defined group of machines by process stage (e.g. "Cutting", "Sanding"); drawn on the floor around its machines. */
+export interface ProcessArea { id: string; name: string; color: string }
 
 export interface MachineType {
   id: string;
@@ -87,6 +92,8 @@ export interface Layout {
   workflow: WorkflowStep[];
   /** Derived from workflow by deriveFlows; stored for the scene and the file format. */
   flows: FlowLink[];
+  /** Process areas; machines join one by Machine.areaId. */
+  areas: ProcessArea[];
 }
 
 export interface Project {

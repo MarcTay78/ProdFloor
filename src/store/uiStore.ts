@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'side';
-type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows' | 'showLeft' | 'showRight' | 'showBottom' | 'animating';
+type ToggleKey = 'showWalls' | 'showLabels' | 'showGrid' | 'showModelsIn2d' | 'showFlows' | 'showLeft' | 'showRight' | 'showBottom' | 'animating' | 'showAreas';
 export type DialogName = 'factory' | 'projects' | 'customType' | 'compare';
 export type LeftTab = 'library' | 'workflow' | 'suggestions';
 
@@ -21,6 +21,7 @@ interface UiState {
   showGrid: boolean;
   showModelsIn2d: boolean;
   showFlows: boolean;
+  showAreas: boolean;
   showLeft: boolean;
   showRight: boolean;
   showBottom: boolean;
@@ -70,6 +71,7 @@ export const useUiStore = create<UiState>()((set) => ({
   showGrid: true,
   showModelsIn2d: false,
   showFlows: true,
+  showAreas: true,
   showLeft: true,
   showRight: true,
   showBottom: true,

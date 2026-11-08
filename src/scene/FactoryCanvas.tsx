@@ -12,6 +12,7 @@ import { MACHINE_TYPE_MIME } from '../ui/LeftLibrary';
 import { toThree } from './coords';
 import { SceneBridge, floorPoint } from './DragController';
 import { FactoryShell } from './FactoryShell';
+import { AreaPatches } from './AreaPatches';
 import { FlowArrows } from './FlowArrows';
 import { PartsAnimation } from './PartsAnimation';
 import { MachineInstance, type MachineStatus } from './MachineInstance';
@@ -121,7 +122,7 @@ function Lights({ factory, flat }: { factory: Factory; flat: boolean }) {
 export function FactoryCanvas() {
   const project = useProjectStore((s) => s.project);
   const addMachine = useProjectStore((s) => s.addMachine);
-  const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, showFlows, animating, select, setCanvasEl } = useUiStore();
+  const { viewMode, selectedId, dragPreview, showLabels, showModelsIn2d, showFlows, showAreas, animating, select, setCanvasEl } = useUiStore();
   const layout = activeLayout(project);
   const flat = viewMode === '2d';
   const shownMachines = layout.machines.map((m) => (dragPreview?.id === m.id ? { ...m, ...dragPreview } : m));
@@ -159,6 +160,7 @@ export function FactoryCanvas() {
         <CameraRig factory={layout.factory} machines={layout.machines} />
         <Lights factory={layout.factory} flat={flat} />
         <FactoryShell factory={layout.factory} flat={flat} />
+        {showAreas && layout.areas.length > 0 && <AreaPatches layout={dragPreview ? { ...layout, machines: shownMachines } : layout} />}
         {showFlows && <FlowArrows flows={layout.flows} machines={shownMachines} showNumbers={showLabels} />}
         {animating && layout.flows.length > 0 && <PartsAnimation layout={layout} />}
         {layout.machines.map((m, i) => {

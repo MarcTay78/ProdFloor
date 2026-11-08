@@ -16,7 +16,7 @@ const box = (x: number, y: number, l = 2, w = 1, over: Partial<Machine> = {}): M
   ...over,
 });
 
-const layout = (machines: Machine[], f: Factory = factory()): Layout => ({ id: 'L', name: 'L', factory: f, machines, workflow: [], flows: [] });
+const layout = (machines: Machine[], f: Factory = factory()): Layout => ({ id: 'L', name: 'L', factory: f, machines, workflow: [], flows: [], areas: [] });
 const codes = (l: Layout) => validateLayout(l).map((w) => w.code).sort();
 
 describe('validateLayout', () => {

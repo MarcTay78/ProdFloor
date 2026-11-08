@@ -14,7 +14,7 @@ const SIDES: Side[] = ['front', 'back', 'left', 'right'];
 
 export function RightInspector() {
   const project = useProjectStore((s) => s.project);
-  const { updateMachine, deleteMachines, duplicateMachine, setTypeModel } = useProjectStore();
+  const { updateMachine, deleteMachines, duplicateMachine, setTypeModel, addArea } = useProjectStore();
   const { selectedId, select, openDialog } = useUiStore();
   const layout = activeLayout(project);
   const m = layout.machines.find((x) => x.id === selectedId);
@@ -31,6 +31,7 @@ export function RightInspector() {
           Click a machine to edit it. Drag to move (hold Alt to skip snapping). Drag the ring to rotate (Shift for 1° steps).
           Shortcuts: R rotate 90°, Ctrl+D duplicate, Delete remove, Ctrl+Z / Ctrl+Y undo / redo, Esc deselect.
         </p>
+        <AreaManager />
       </Panel>
     );
   }
@@ -57,6 +58,22 @@ export function RightInspector() {
         Type
         <select className={`${input} max-w-[170px]`} value={m.typeId} onChange={(e) => set({ typeId: e.target.value })}>
           {allTypes(project).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </label>
+      <label className="mt-2 flex items-center justify-between gap-2 text-xs text-slate-400">
+        Process area
+        <select
+          className={`${input} max-w-[170px]`}
+          value={m.areaId ?? ''}
+          onChange={(e) => {
+            if (e.target.value !== NEW_AREA) return set({ areaId: e.target.value || undefined });
+            const name = prompt('New process area name', 'Sanding')?.trim();
+            if (name) set({ areaId: addArea(name) });
+          }}
+        >
+          <option value="">None</option>
+          {layout.areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          <option value={NEW_AREA}>+ New area…</option>
         </select>
       </label>
       <button className={`${btn} mt-1 w-full`} onClick={resetToType}>Reset to type defaults</button>
@@ -163,6 +180,49 @@ function ModelSection({ m, typeName, typeModel, onSetMachine, onSetType }: {
         {!m.modelOverride && typeModel && <button className={btn} onClick={() => onSetType(null)}>Clear type model</button>}
       </div>
     </div>
+  );
+}
+
+const NEW_AREA = '__new__';
+
+/** Process areas of the active layout: add, rename (blur/Enter), recolour, delete; shows machine count. */
+function AreaManager() {
+  const project = useProjectStore((s) => s.project);
+  const { addArea, updateArea, removeArea } = useProjectStore();
+  const layout = activeLayout(project);
+  const add = () => {
+    const name = prompt('New process area name', `Area ${layout.areas.length + 1}`)?.trim();
+    if (name) addArea(name);
+  };
+  return (
+    <Section title="Process areas">
+      {!layout.areas.length && (
+        <p className="text-xs text-slate-500">Group machines by process stage. Add an area, then pick it under "Process area" for each machine.</p>
+      )}
+      {layout.areas.map((a) => {
+        const n = layout.machines.filter((m) => m.areaId === a.id).length;
+        return (
+          <div key={a.id} className="flex items-center gap-1">
+            <input type="color" className="h-6 w-7 shrink-0" value={a.color} onChange={(e) => updateArea(a.id, { color: e.target.value })} aria-label={`Colour of ${a.name}`} />
+            <input
+              key={a.id + a.name}
+              className={`${input} min-w-0 flex-1`}
+              defaultValue={a.name}
+              onBlur={(e) => e.target.value.trim() && e.target.value !== a.name && updateArea(a.id, { name: e.target.value.trim() })}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+              aria-label="Area name"
+            />
+            <span className="w-6 text-right text-[11px] text-slate-400" title="Machines in this area">{n}</span>
+            <button
+              className="px-1 text-slate-400 hover:text-red-300"
+              onClick={() => (!n || confirm(`Delete "${a.name}"? Its ${n} machine(s) will be unassigned.`)) && removeArea(a.id)}
+              aria-label={`Delete ${a.name}`}
+            >×</button>
+          </div>
+        );
+      })}
+      <button className={`${btn} w-full`} onClick={add}>+ Add area</button>
+    </Section>
   );
 }
 
