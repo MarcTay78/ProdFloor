@@ -19,6 +19,7 @@ Design and plan: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
 - **Compare** (toolbar, needs two or more layouts): tick layouts to put side by side. Rows: material movement (Manhattan and straight-line), longest move with its steps, machines, steps, empty steps, footprint / operator / clearance / free floor %, errors and warnings. The best value per row is green; **Switch** makes a layout active.
 - **Suggestions tab** (left panel): hints for the active layout. Machine swaps that cut material movement by 1 m or more without creating new errors (top 3, with the saving), unusually long moves between steps, crossing flows, production machines not in the workflow, and a crowded floor (under 15 % free). Click a hint to select its machine; nothing is moved for you.
+- **Auto-arrange → new layout** (Suggestions tab, Phase 3b): repeatedly applies the best machine swap (saves ≥ 1 m, no new errors) until none is left, and saves the result as a new layout named "… (auto-arranged)". The original is kept; use **Compare** to judge it. Swaps only exchange machine positions, so it will not move machines into empty floor.
 
 ## Run locally
 
