@@ -29,7 +29,8 @@ export function LeftLibrary() {
     const id = addMachine(typeId, layout.factory.length / 2, layout.factory.width / 2);
     if (id) select(id);
   };
-  const addWorkerAtCentre = () => select(addWorker({ x: layout.factory.length / 2, y: layout.factory.width / 2 }));
+  const addWorkerAtCentre = (role?: 'forklift') => select(addWorker({ x: layout.factory.length / 2, y: layout.factory.width / 2 }, role));
+  const forklifts = layout.workers.filter((w) => w.role === 'forklift').length;
 
   return (
     <div className="flex h-full flex-col border-r border-slate-700 bg-slate-900 text-slate-200">
@@ -43,14 +44,27 @@ export function LeftLibrary() {
           <div
             draggable
             onDragStart={(e) => { e.dataTransfer.setData(WORKER_MIME, 'worker'); e.dataTransfer.effectAllowed = 'copy'; }}
-            onDoubleClick={addWorkerAtCentre}
+            onDoubleClick={() => addWorkerAtCentre()}
             className="mb-1 cursor-grab rounded border border-slate-700 bg-slate-800/60 px-2 py-1.5 hover:border-amber-500 active:cursor-grabbing"
             title="Drag onto the factory floor, then assign machines in the inspector"
           >
             <div className="flex items-center justify-between gap-2 text-xs">
               <span>Worker</span>
-              <span className="rounded bg-slate-700 px-1.5 text-[11px] text-slate-300" title="Placed in this layout">{layout.workers.length}</span>
+              <span className="rounded bg-slate-700 px-1.5 text-[11px] text-slate-300" title="Placed in this layout">{layout.workers.length - forklifts}</span>
             </div>
+          </div>
+          <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData(WORKER_MIME, 'forklift'); e.dataTransfer.effectAllowed = 'copy'; }}
+            onDoubleClick={() => addWorkerAtCentre('forklift')}
+            className="mb-1 cursor-grab rounded border border-slate-700 bg-slate-800/60 px-2 py-1.5 hover:border-amber-500 active:cursor-grabbing"
+            title="Drag onto the factory floor, then set its path in the inspector"
+          >
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span>Forklift</span>
+              <span className="rounded bg-slate-700 px-1.5 text-[11px] text-slate-300" title="Placed in this layout">{forklifts}</span>
+            </div>
+            <div className="text-[11px] text-slate-500">3.3 × 1.2 × 2.2 m, with driver</div>
           </div>
         </div>
         {CATEGORIES.map((cat) => {

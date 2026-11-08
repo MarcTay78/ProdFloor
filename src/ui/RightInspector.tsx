@@ -189,8 +189,9 @@ function ModelSection({ m, typeName, typeModel, onSetMachine, onSetType }: {
 }
 
 const ROLES: { id: WorkerRole; label: string; hint: string }[] = [
-  { id: 'operator', label: 'Machine operator', hint: 'Stands at the machine and works when you press Play.' },
-  { id: 'handler', label: 'Material handler', hint: 'Moves material: walks its path when you press Play.' },
+  { id: 'operator', label: 'Operator', hint: 'Machine operator: stands at the machine and works when you press Play.' },
+  { id: 'handler', label: 'Handler', hint: 'Material handler: walks its path moving material when you press Play.' },
+  { id: 'forklift', label: 'Forklift', hint: 'Forklift driver: drives along its path when you press Play.' },
 ];
 
 /** Selected worker: role, name, position, walking path (handlers), machines they run, delete. */
@@ -214,7 +215,7 @@ function WorkerPanel({ w }: { w: Worker }) {
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
         aria-label="Worker name"
       />
-      <div className="mt-2 grid grid-cols-2 gap-1" role="radiogroup" aria-label="Worker role">
+      <div className="mt-2 grid grid-cols-3 gap-1" role="radiogroup" aria-label="Worker role">
         {ROLES.map((r) => (
           <button
             key={r.id}
@@ -239,7 +240,7 @@ function WorkerPanel({ w }: { w: Worker }) {
           </button>
         )}
       </div>
-      {w.role === 'handler' && <div className="mt-3 border-t border-slate-800 pt-2">
+      {w.role !== 'operator' && <div className="mt-3 border-t border-slate-800 pt-2">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">Walking path</div>
         <p className="text-xs text-slate-400">
           {w.path.length

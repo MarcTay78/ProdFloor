@@ -150,7 +150,7 @@ export function FactoryCanvas() {
     if (!p) return;
     const snap = useUiStore.getState().snap;
     const at = { x: snapTo(p.x, snap), y: snapTo(p.y, snap) };
-    const id = isWorker ? addWorker(at) : addMachine(typeId, at.x, at.y);
+    const id = isWorker ? addWorker(at, e.dataTransfer.getData(WORKER_MIME) === 'forklift' ? 'forklift' : 'operator') : addMachine(typeId, at.x, at.y);
     if (id) select(id);
   };
 
