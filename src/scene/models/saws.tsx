@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { B, C, Panel, RollerBed, mat, usePaint, type ModelProps } from './parts';
 
 export function Bandsaw({ l, w, h, color }: ModelProps) {
@@ -72,6 +73,68 @@ export function RipSaw({ l, w, h, color }: ModelProps) {
       <C p={[0, h - 0.06, w * 0.2]} rad={0.1} len={0.12} m={mat.grey} />
       <C p={[l * 0.12, h - 0.15, -w * 0.25]} rad={0.07} len={0.3} m={mat.steel} axis="x" />
       <Panel p={[l * 0.3, bedH + 0.35, -w * 0.45]} s={[0.25, 0.25, 0.06]} />
+    </>
+  );
+}
+
+const headGrey = new THREE.MeshStandardMaterial({ color: '#d4d6d0', metalness: 0.15, roughness: 0.55 });
+const motorBlue = new THREE.MeshStandardMaterial({ color: '#2f7fd1', metalness: 0.35, roughness: 0.4 });
+const beltGreen = new THREE.MeshStandardMaterial({ color: '#2e6b4a', metalness: 0, roughness: 0.8 });
+
+/** One saw head: grey blade housing, blade, blue motor with dust outlet and belt guard. Blade plane is x-y (cuts across z). */
+function TrimHead({ x, y, z, l }: { x: number; y: number; z: number; l: number }) {
+  const r = 0.2;
+  return (
+    <group position={[x, y, z]}>
+      <B p={[0, 0.22, 0]} s={[l * 0.55, 0.44, 0.22]} m={headGrey} />
+      <C p={[l * 0.05, 0.05, 0.12]} rad={r} len={0.006} m={mat.blade} axis="z" seg={40} />
+      <C p={[l * 0.05, 0.05, 0.12]} rad={0.04} len={0.03} m={mat.steel} axis="z" />
+      <C p={[-l * 0.02, 0.6, 0]} rad={0.15} len={0.4} m={motorBlue} axis="x" />
+      <C p={[-l * 0.02 - 0.22, 0.6, 0]} rad={0.11} len={0.04} m={mat.dark} axis="x" />
+      <C p={[l * 0.17, 0.6, 0.05]} rad={0.05} len={0.24} m={headGrey} />
+      <B p={[-l * 0.02 + 0.24, 0.45, -0.13]} s={[0.1, 0.7, 0.04]} m={headGrey} />
+    </group>
+  );
+}
+
+/**
+ * Double-end trim saw: boards travel along x between two saw heads that cut both ends at once.
+ * Blue frame with rails along z; one head fixed (-z), one on a carriage (+z) set by a threaded rod.
+ */
+export function DoubleEndSaw({ l, w, h, color }: ModelProps) {
+  const frame = usePaint(color, mat.blue);
+  const railY = Math.min(0.85, h * 0.55);
+  const headY = railY + 0.08;
+  const zFixed = -w * 0.3, zMove = w * 0.15;
+  return (
+    <>
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <B p={[s * l * 0.3, railY - 0.06, 0]} s={[0.12, 0.12, w * 0.9]} m={frame} />
+          <B p={[s * l * 0.3, 0.3, 0]} s={[0.1, 0.1, w * 0.78]} m={frame} />
+          <C p={[s * l * 0.18, railY + 0.03, 0]} rad={0.025} len={w * 0.88} m={mat.steel} axis="z" />
+          {[-1, 1].map((e) => (
+            <group key={e}>
+              <B p={[s * l * 0.3, (railY - 0.12) / 2, e * w * 0.42]} s={[0.12, railY - 0.12, 0.12]} m={frame} />
+              <B p={[s * l * 0.3, 0.015, e * w * 0.42]} s={[0.3, 0.03, 0.2]} m={mat.dark} />
+            </group>
+          ))}
+        </group>
+      ))}
+      {[-1, 1].map((e) => <B key={e} p={[0, railY - 0.06, e * w * 0.42]} s={[l * 0.6, 0.1, 0.1]} m={frame} />)}
+      {[-0.1, 0.32].map((f) => <B key={f} p={[0, railY, w * f]} s={[l * 0.7, 0.03, 0.12]} m={beltGreen} />)}
+      <TrimHead x={0} y={headY} z={zFixed} l={l} />
+      <B p={[0, railY + 0.02, zMove]} s={[l * 0.7, 0.06, 0.3]} m={headGrey} />
+      <TrimHead x={0} y={headY} z={zMove} l={l} />
+      <C p={[l * 0.15, headY + 0.3, (zFixed + w * 0.45) / 2]} rad={0.015} len={w * 0.75} m={mat.steel} axis="z" />
+      <B p={[-l * 0.42, headY + 0.3, -w * 0.33]} s={[0.08, 0.32, 0.42]} m={headGrey} />
+      {[-0.1, 0, 0.1].map((dz, i) => (
+        <group key={dz}>
+          <C p={[-l * 0.42 - 0.045, headY + 0.38, -w * 0.33 + dz]} rad={0.025} len={0.02} m={mat.red} axis="x" />
+          <C p={[-l * 0.42 - 0.045, headY + 0.24, -w * 0.33 + dz]} rad={0.025} len={0.02} m={i === 2 ? mat.red : beltGreen} axis="x" />
+        </group>
+      ))}
+      <B p={[-l * 0.2, (railY + 0.1) / 2 + 0.1, -w * 0.47]} s={[l * 0.4, railY + 0.1, 0.12]} m={headGrey} />
     </>
   );
 }

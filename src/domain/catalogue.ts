@@ -35,6 +35,13 @@ function masterSander(): MachineType {
   return type;
 }
 
+/** Double-end trim saw: boards are fed through between the two heads, so the operator stands at the infeed (left) side. */
+function doubleEndSaw(): MachineType {
+  const type = t('double-end-saw', 'Double-end cutting machine', 'cutting', 1.3, 2.6, 1.6);
+  type.defaults.operatorArea = { side: 'left', depth: 0.9, width: 2.0 };
+  return type;
+}
+
 export const CATALOGUE: MachineType[] = [
   t('raw-timber-rack', 'Raw timber storage rack', 'storage', 6.0, 1.2, 3.0),
   t('timber-pallet-stack', 'Raw timber on pallets', 'storage', 2.4, 2.3, 2.2),
@@ -43,6 +50,7 @@ export const CATALOGUE: MachineType[] = [
   t('bandsaw', 'Bandsaw', 'cutting', 1.2, 0.9, 2.1),
   t('table-saw', 'Table saw', 'cutting', 2.0, 1.6, 1.0),
   t('crosscut-saw', 'Crosscut saw', 'cutting', 4.0, 1.0, 1.6),
+  doubleEndSaw(),
   t('rip-saw', 'Rip saw', 'cutting', 3.0, 1.2, 1.6),
   t('surface-planer', 'Surface planer (jointer)', 'planing', 2.5, 0.8, 1.0),
   t('thickness-planer', 'Thickness planer', 'planing', 1.6, 1.1, 1.3),
